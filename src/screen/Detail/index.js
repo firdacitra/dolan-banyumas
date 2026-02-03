@@ -15,13 +15,19 @@ const { width } = Dimensions.get("window");
 
 export default function Detail({ navigation, route }) {
 	const [liked, setLiked] = useState(false);
+	const [activeSlide, setActiveSlide] = useState(0);
 
-	// DATA DUMMY (nanti dari backend Laravel)
-	const data = route?.params || {
-		title: "Museum Wayang Banyumas",
-		image: require("../../assets/depo bay.jpg"),
-		rating: 4,
-		description: `Lorem ipsum dolor sit amet`,
+	// Ambil data dari route params
+	const { item } = route.params;
+
+	// Array gambar untuk carousel (bisa pakai gambar yang sama dulu atau tambahin field images di data)
+	const images = [item.image, item.image, item.image];
+
+	const handleScroll = (event) => {
+		const slideSize = event.nativeEvent.layoutMeasurement.width;
+		const offset = event.nativeEvent.contentOffset.x;
+		const activeIndex = Math.round(offset / slideSize);
+		setActiveSlide(activeIndex);
 	};
 
 	return (
@@ -32,17 +38,34 @@ export default function Detail({ navigation, route }) {
 					<TouchableOpacity onPress={() => navigation.goBack()}>
 						<Ionicons name="arrow-back" size={24} color="#000" />
 					</TouchableOpacity>
-					<Text style={styles.headerTitle}>{data.title}</Text>
+					<Text style={styles.headerTitle} numberOfLines={1}>
+						{item.name}
+					</Text>
 					<View style={{ width: 24 }} />
 				</View>
 
-				{/* ===== IMAGE ===== */}
-				<Image source={data.image} style={styles.image} />
+				{/* ===== IMAGE CAROUSEL ===== */}
+				<ScrollView
+					horizontal
+					pagingEnabled
+					showsHorizontalScrollIndicator={false}
+					onScroll={handleScroll}
+					scrollEventThrottle={16}
+					style={{ marginBottom: 10 }}
+				>
+					{images.map((image, index) => (
+						<Image key={index} source={image} style={styles.image} />
+					))}
+				</ScrollView>
 
 				{/* ===== DOT ===== */}
 				<View style={styles.dots}>
-					<View style={styles.dotActive} />
-					<View style={styles.dot} />
+					{images.map((_, index) => (
+						<View
+							key={index}
+							style={index === activeSlide ? styles.dotActive : styles.dot}
+						/>
+					))}
 				</View>
 
 				{/* ===== ACTION ROW ===== */}
@@ -55,19 +78,31 @@ export default function Detail({ navigation, route }) {
 						{[1, 2, 3, 4, 5].map((i) => (
 							<Ionicons
 								key={i}
-								name={i <= data.rating ? "star" : "star-outline"}
+								name={i <= Math.floor(item.rating) ? "star" : "star-outline"}
 								size={20}
 								color="#FFC107"
 							/>
 						))}
 					</View>
 
-					<Ionicons name="location-outline" size={22} color="#000" />
+					<TouchableOpacity>
+						<Ionicons name="location-outline" size={22} color="#000" />
+					</TouchableOpacity>
 				</View>
 
 				{/* ===== DESCRIPTION CARD ===== */}
 				<View style={styles.descCard}>
-					<Text style={styles.descText}>{data.description}</Text>
+					<Text style={styles.descText}>
+						{item.description ||
+							`${item.name} berlokasi di ${item.address}. Tempat ini menawarkan pengalaman yang menarik dan tak terlupakan untuk dikunjungi.`}
+					</Text>
+					{item.address && (
+						<Text
+							style={[styles.descText, { marginTop: 10, fontWeight: "600" }]}
+						>
+							📍 Alamat: {item.address}
+						</Text>
+					)}
 				</View>
 			</ScrollView>
 
@@ -79,10 +114,6 @@ export default function Detail({ navigation, route }) {
 						size={26}
 						color={liked ? "red" : "#000"}
 					/>
-				</TouchableOpacity>
-
-				<TouchableOpacity style={styles.downloadBtn}>
-					<Ionicons name="download-outline" size={22} color="#000" />
 				</TouchableOpacity>
 			</View>
 		</SafeAreaView>
@@ -100,13 +131,19 @@ const styles = StyleSheet.create({
 	headerTitle: {
 		fontSize: 16,
 		fontWeight: "600",
+		flex: 1,
+		textAlign: "center",
+		paddingHorizontal: 10,
 	},
 
 	image: {
 		width: width - 40,
 		height: 200,
 		borderRadius: 16,
-		alignSelf: "center",
+		marginLeft: 20,
+		marginRight: 20,
+		marginBottom: 10,
+		boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
 	},
 
 	dots: {
@@ -166,10 +203,5 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		padding: 16,
-	},
-	downloadBtn: {
-		backgroundColor: "#E0E0E0",
-		padding: 10,
-		borderRadius: 20,
 	},
 });
