@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { getRecommendations } from "../../../constant/dataMenu";
+import { getRecommendations } from "../../../constant/dataMenu/index.js";
 
 const { width } = Dimensions.get("window");
 
