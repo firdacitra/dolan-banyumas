@@ -1,6 +1,6 @@
 // src/navigation/index.js
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import AppNavigator from "./app"; // Import Tab Navigator
+import AppNavigator from "./app";
 
 // Import semua screen untuk stack navigation
 import LoginScreen from "../screen/LoginScreen";
@@ -11,6 +11,7 @@ import Language from "../screen/MainTab/ProfileScreen/Language";
 import Accessibility from "../screen/MainTab/ProfileScreen/Accessibility";
 import Rating from "../screen/MainTab/ProfileScreen/Rating";
 import Account from "../screen/MainTab/ProfileScreen/Account";
+import EditProfile from "../screen/MainTab/ProfileScreen/EditProfile";
 import MenuList from "../screen/MenuListScreen";
 import Detail from "../screen/Detail";
 
@@ -35,6 +36,7 @@ export default function RootNavigation() {
       <Stack.Screen name="Accessibility" component={Accessibility} />
       <Stack.Screen name="Rating" component={Rating} />
       <Stack.Screen name="Account" component={Account} />
+      <Stack.Screen name="EditProfile" component={EditProfile} />
       
       <Stack.Screen name="MenuList" component={MenuList} />
       <Stack.Screen name="Detail" component={Detail} />

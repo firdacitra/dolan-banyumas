@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Alert,
   Image,
   Modal,
-  SafeAreaView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +15,7 @@ import {
   View,
 } from "react-native";
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation, route }) => {
   // Mock i18n function untuk terjemahan
   const i18n = {
     t: (key) => {
@@ -48,8 +49,22 @@ const ProfileScreen = ({ navigation }) => {
     primary: '#007AFF'
   };
 
-  const [profileImage, setProfileImage] = useState("https://via.placeholder.com/70");
+  // State untuk data profil
+  const [profileData, setProfileData] = useState({
+    image: "https://via.placeholder.com/70",
+    username: i18n.t('username'),
+    phone: "08123456789",
+    email: "username@gmail.com"
+  });
+
   const [showImageOptions, setShowImageOptions] = useState(false);
+
+  // Terima data dari EditProfile
+  useEffect(() => {
+    if (route.params?.updatedProfile) {
+      setProfileData(route.params.updatedProfile);
+    }
+  }, [route.params?.updatedProfile]);
 
   // Fungsi untuk meminta permission
   const requestPermission = async (type) => {
@@ -71,11 +86,33 @@ const ProfileScreen = ({ navigation }) => {
 
   // Fungsi untuk mengambil foto dari kamera
   const takePhoto = async () => {
+    setShowImageOptions(false);
+
+    if (Platform.OS === 'web') {
+      // Untuk web/laptop — buka kamera langsung
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'user';
+
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setProfileData({...profileData, image: event.target.result});
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+      return;
+    }
+
+    // Mobile
     const hasPermission = await requestPermission('camera');
     if (!hasPermission) return;
 
-    setShowImageOptions(false);
-    
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -84,7 +121,7 @@ const ProfileScreen = ({ navigation }) => {
     });
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+      setProfileData({...profileData, image: result.assets[0].uri});
     }
   };
 
@@ -103,7 +140,7 @@ const ProfileScreen = ({ navigation }) => {
     });
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+      setProfileData({...profileData, image: result.assets[0].uri});
     }
   };
 
@@ -127,14 +164,22 @@ const ProfileScreen = ({ navigation }) => {
       title: i18n.t('language'), 
       icon: "globe-outline",
       section: i18n.t('appSettings'),
-      onPress: () => console.log('Language clicked') // Hanya log, tidak navigasi
+      onPress: () => {
+        if (navigation && navigation.navigate) {
+          navigation.navigate('Language');
+        }
+      }
     },
     { 
       id: 4, 
       title: i18n.t('accessibility'), 
       icon: "accessibility-outline",
       section: i18n.t('appSettings'),
-      onPress: () => console.log('Accessibility clicked') // Hanya log, tidak navigasi
+      onPress: () => {
+        if (navigation && navigation.navigate) {
+          navigation.navigate('Accessibility');
+        }
+      }
     },
     { 
       id: 5, 
@@ -163,6 +208,7 @@ const ProfileScreen = ({ navigation }) => {
             key={item.id} 
             style={[styles.menuItem, { backgroundColor: theme.card }]}
             onPress={item.onPress}
+            activeOpacity={0.7}
           >
             <View style={styles.menuLeft}>
               <Ionicons name={item.icon} size={20} color={theme.text} />
@@ -187,7 +233,7 @@ const ProfileScreen = ({ navigation }) => {
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
+          {/* Header - Kosong karena tidak perlu judul */}
           <View style={styles.header}>
           </View>
 
@@ -197,24 +243,30 @@ const ProfileScreen = ({ navigation }) => {
               <TouchableOpacity 
                 style={styles.avatarContainer}
                 onPress={() => setShowImageOptions(true)}
+                activeOpacity={0.7}
               >
                 <Image
-                  source={{ uri: profileImage }}
+                  source={{ uri: profileData.image }}
                   style={styles.avatar}
                 />
-                <View style={styles.cameraIconOverlay}>
-                  <Ionicons name="camera" size={16} color="#fff" />
-                </View>
               </TouchableOpacity>
               <View style={styles.profileInfo}>
-                <Text style={[styles.username, { color: theme.text }]}>{i18n.t('username')}</Text>
-                <Text style={[styles.phone, { color: theme.textSecondary }]}>08123456789</Text>
-                <Text style={[styles.email, { color: theme.textSecondary }]}>username@gmail.com</Text>
+                <Text style={[styles.username, { color: theme.text }]}>{profileData.username}</Text>
+                <Text style={[styles.phone, { color: theme.textSecondary }]}>{profileData.phone}</Text>
+                <Text style={[styles.email, { color: theme.textSecondary }]}>{profileData.email}</Text>
               </View>
             </View>
+            
+            {/* Tombol Edit Profil - Kirim data ke EditProfile */}
             <TouchableOpacity 
               style={[styles.editProfileButton, { backgroundColor: theme.primary }]}
-              onPress={() => setShowImageOptions(true)}
+              onPress={() => navigation.navigate('EditProfile', {
+                currentImage: profileData.image,
+                currentUsername: profileData.username,
+                currentPhone: profileData.phone,
+                currentEmail: profileData.email
+              })}
+              activeOpacity={0.7}
             >
               <Text style={styles.editProfileText}>{i18n.t('editProfile')}</Text>
             </TouchableOpacity>
@@ -265,11 +317,11 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={[styles.modalOptionText, { color: theme.text }]}>{i18n.t('chooseFromGallery')}</Text>
             </TouchableOpacity>
 
-            {profileImage !== "https://via.placeholder.com/70" && (
+            {profileData.image !== "https://via.placeholder.com/70" && (
               <TouchableOpacity 
                 style={[styles.modalOption, styles.modalOptionDanger]}
                 onPress={() => {
-                  setProfileImage("https://via.placeholder.com/70");
+                  setProfileData({...profileData, image: "https://via.placeholder.com/70"});
                   setShowImageOptions(false);
                 }}
               >
@@ -299,13 +351,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
   },
   profileCard: {
     marginHorizontal: 16,

@@ -135,7 +135,7 @@ const MenuListScreen = () => {
 				</TouchableOpacity>
 
 				<View style={styles.searchContainer}>
-					<Text style={styles.searchIcon}>🔍</Text>
+					<Text style={styles.searchIcon}></Text>
 					<TextInput
 						style={styles.searchInput}
 						placeholder={`Cari ${getCategoryTitle()}`}

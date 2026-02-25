@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +22,8 @@ const Favorites = ({ navigation }) => {
       {
         id: 1,
         name: 'Curug Cipendok',
-        location: 'Banyumas, Jawa Tengah',
+        location: 'Desa Karangtengah, Cilongok',
+        category: 'Wisata Alam',
         rating: 4.5,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -31,6 +32,7 @@ const Favorites = ({ navigation }) => {
         id: 11,
         name: 'Baturraden',
         location: 'Banyumas, Jawa Tengah',
+        category: 'Wisata Alam',
         rating: 4.8,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -41,6 +43,7 @@ const Favorites = ({ navigation }) => {
         id: 2,
         name: 'Hotel Santika',
         location: 'Purwokerto, Jawa Tengah',
+        category: 'Penginapan',
         rating: 4.3,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -51,6 +54,7 @@ const Favorites = ({ navigation }) => {
         id: 3,
         name: 'Sate Buntel',
         location: 'Purwokerto, Jawa Tengah',
+        category: 'Kuliner',
         rating: 4.7,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -61,6 +65,7 @@ const Favorites = ({ navigation }) => {
         id: 4,
         name: 'Getuk Goreng',
         location: 'Sokaraja, Banyumas',
+        category: 'Oleh-oleh',
         rating: 4.2,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -71,6 +76,7 @@ const Favorites = ({ navigation }) => {
         id: 5,
         name: 'Desa Wisata Karangbanjar',
         location: 'Banyumas, Jawa Tengah',
+        category: 'Desa Wisata',
         rating: 4.6,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -81,6 +87,7 @@ const Favorites = ({ navigation }) => {
         id: 6,
         name: 'Banyumas Tour',
         location: 'Purwokerto, Jawa Tengah',
+        category: 'Biro Perjalanan',
         rating: 4.4,
         image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
         isFavorite: true,
@@ -90,13 +97,13 @@ const Favorites = ({ navigation }) => {
 
   // Kategori dengan icon yang sesuai gambar
   const categories = [
-    { name: 'Semua', icon: 'apps', iconColor: '#4CAF50' },
-    { name: 'Objek Wisata', icon: 'image', iconColor: '#2196F3' },
-    { name: 'Kuliner', icon: 'restaurant', iconColor: '#FF9800' },
-    { name: 'Penginapan', icon: 'bed', iconColor: '#00BCD4' },
-    { name: 'Oleh-oleh', icon: 'gift', iconColor: '#E91E63' },
-    { name: 'Desa Wisata', icon: 'home', iconColor: '#8BC34A' },
-    { name: 'Biro Perjalanan', icon: 'car', iconColor: '#FFC107' },
+    { name: 'Semua', icon: 'apps', iconColor: '#0a4914' },
+    { name: 'Objek Wisata', icon: 'image', iconColor: '#FF5757' },
+    { name: 'Kuliner', icon: 'restaurant', iconColor: '#FF8C42' },
+    { name: 'Penginapan', icon: 'bed', iconColor: '#4CAF50' },
+    { name: 'Oleh-oleh', icon: 'gift', iconColor: '#9C27B0' },
+    { name: 'Desa Wisata', icon: 'home', iconColor: '#2196F3' },
+    { name: 'Biro Perjalanan', icon: 'car', iconColor: '#FF6B9D' },
   ];
 
   const toggleFavorite = (category, itemId) => {
@@ -110,63 +117,78 @@ const Favorites = ({ navigation }) => {
     }));
   };
 
-  const renderHotelCard = (item, category) => (
-    <View key={item.id} style={styles.hotelCard}>
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(
+          <Text key={i} style={styles.starFull}>★</Text>
+        );
+      } else {
+        stars.push(
+          <Text key={i} style={styles.starEmpty}>★</Text>
+        );
+      }
+    }
+    return stars;
+  };
+
+  const getCategoryBadgeColor = (category) => {
+    const colors = {
+      "Wisata Alam": "#FF5757",
+      "Wisata Buatan": "#FF5757",
+      "Kuliner": "#FF8C42",
+      "Penginapan": "#4CAF50",
+      "Oleh-oleh": "#9C27B0",
+      "Desa Wisata": "#2196F3",
+      "Biro Perjalanan": "#FF6B9D",
+    };
+    return colors[category] || "#FF5757";
+  };
+
+  const renderCard = (item, category) => (
+    <View key={item.id} style={styles.card}>
+      <Image 
+        source={{ uri: item.image }}
+        style={styles.cardImage}
+        resizeMode="cover"
+      />
+
       <View style={styles.cardContent}>
-        <Image 
-          source={{ uri: item.image }}
-          style={styles.hotelImage}
-          resizeMode="cover"
-        />
-        <View style={styles.hotelInfo}>
-          <View style={styles.hotelHeader}>
-            <View style={styles.headerLeft}>
-              <View style={styles.tagContainer}>
-                <LinearGradient
-                  colors={['#FF4D4D', '#CC0000']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.discountTag}
-                >
-                  <Text style={styles.discountText}>25% OFF</Text>
-                </LinearGradient>
-              </View>
-              <Text style={styles.hotelName}>{item.name}</Text>
-              <Text style={styles.hotelLocation} numberOfLines={2}>
-                {item.location}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.favoriteButton}
-              onPress={() => toggleFavorite(category, item.id)}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name={item.isFavorite ? "heart" : "heart-outline"} 
-                size={22} 
-                color={item.isFavorite ? "#FF4D4D" : "#000"} 
-              />
-            </TouchableOpacity>
+        <View
+          style={[
+            styles.categoryBadge,
+            { backgroundColor: getCategoryBadgeColor(item.category) },
+          ]}
+        >
+          <Text style={styles.categoryText}>{item.category}</Text>
+        </View>
+
+        <Text style={styles.cardTitle}>{item.name}</Text>
+        <Text style={styles.cardAddress}>{item.location}</Text>
+
+        <View style={styles.cardFooter}>
+          <View style={styles.ratingContainer}>
+            {renderStars(item.rating)}
           </View>
-          
-          <View style={styles.hotelFooter}>
-            <View style={styles.ratingContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons 
-                  key={star} 
-                  name={star <= Math.floor(item.rating) ? "star" : "star-outline"}
-                  size={14} 
-                  color="#FFB800" 
-                  style={styles.starIcon}
-                />
-              ))}
-            </View>
-            <TouchableOpacity style={styles.availabilityButton}>
-              <Text style={styles.availabilityText}>Lihat Detail</Text>
-            </TouchableOpacity>
-          </View>
+
+          <TouchableOpacity
+            style={styles.detailButton}
+            onPress={() => navigation.navigate("Detail", { item })}
+          >
+            <Text style={styles.detailButtonText}>Lihat selengkapnya</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <TouchableOpacity 
+        style={styles.favoriteButton}
+        onPress={() => toggleFavorite(category, item.id)}
+      >
+        <Text style={[styles.favoriteIcon, item.isFavorite && styles.favoriteIconActive]}>
+          {item.isFavorite ? "❤️" : "♡"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -189,21 +211,17 @@ const Favorites = ({ navigation }) => {
         key={category.name}
         style={[
           styles.categoryItem,
-          isSelected && styles.categoryItemActive
+          isSelected && { backgroundColor: category.iconColor, borderColor: category.iconColor }
         ]}
         onPress={() => setSelectedCategory(category.name)}
         activeOpacity={0.7}
       >
-        <View style={[
-          styles.categoryIconContainer,
-          { backgroundColor: isSelected ? category.iconColor : '#E3F2FD' }
-        ]}>
-          <Ionicons 
-            name={category.icon} 
-            size={22} // Diperkecil dari 28
-            color={isSelected ? '#FFF' : category.iconColor}
-          />
-        </View>
+        <Ionicons 
+          name={category.icon} 
+          size={14}
+          color={isSelected ? '#FFF' : category.iconColor}
+          style={{ marginRight: 5 }}
+        />
         <Text style={[
           styles.categoryItemText,
           isSelected && styles.categoryItemTextActive
@@ -258,18 +276,11 @@ const Favorites = ({ navigation }) => {
                 {selectedCategory === 'Semua' && (
                   <Text style={styles.categoryTitle}>{category}</Text>
                 )}
-                {items.map(item => renderHotelCard(item, category))}
+                {items.map(item => renderCard(item, category))}
               </View>
             )
           ))}
         </ScrollView>
-
-        {/* Floating Download Button */}
-        <TouchableOpacity style={styles.downloadButton} activeOpacity={0.8}>
-          <View style={styles.downloadButtonInner}>
-            <Ionicons name="arrow-down-circle-outline" size={24} color="#000" />
-          </View>
-        </TouchableOpacity>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -300,7 +311,6 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
     textAlign: 'center',
-    marginRight: 32,
   },
   headerRight: {
     width: 32,
@@ -308,56 +318,42 @@ const styles = StyleSheet.create({
   
   // Horizontal Category Scroll Styles
   categoryScrollContainer: {
-    height: 110, // Diperkecil dari 230
-    paddingVertical: 12,
+    height: 52,
+    paddingVertical: 8,
     paddingLeft: 16,
     marginBottom: 8,
   },
   categoryScroll: {
-    height: 110,
+    height: 52,
   },
   categoryScrollContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingRight: 16,
-    gap: 12, // Spasi antara item
+    gap: 8,
   },
   categoryItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 20,
     backgroundColor: '#FFF',
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
     elevation: 2,
-    minWidth: 80, // Lebar minimum untuk setiap item
-    height: 86, // Tinggi tetap
-  },
-  categoryItemActive: {
-    backgroundColor: '#FFF',
-    borderWidth: 2,
-    borderColor: '#0066FF',
-  },
-  categoryIconContainer: {
-    width: 44, // Diperkecil dari 56
-    height: 44, // Diperkecil dari 56
-    borderRadius: 22, // Diperkecil dari 28
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6, // Diperkecil dari 8
   },
   categoryItemText: {
-    fontSize: 10, // Diperkecil dari 11
+    fontSize: 12,
     fontWeight: '500',
-    color: '#333',
-    textAlign: 'center',
-    maxWidth: 70, // Membatasi lebar teks
+    color: '#555',
   },
   categoryItemTextActive: {
-    color: '#0066FF',
+    color: '#FFF',
     fontWeight: '600',
   },
   
@@ -377,110 +373,104 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 12,
   },
-  hotelCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+  
+  // Card Styles - SAMA SEPERTI DI HOME SCREEN
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 15,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
+    shadowRadius: 6,
+    elevation: 4,
+    position: "relative",
+  },
+  cardImage: {
+    width: 95,
+    height: 95,
+    borderRadius: 16,
+    resizeMode: "cover",
   },
   cardContent: {
-    flexDirection: 'row',
-    padding: 12,
-  },
-  hotelImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  hotelInfo: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
+    paddingLeft: 12,
+    justifyContent: "space-between",
   },
-  hotelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  tagContainer: {
-    marginBottom: 4,
-  },
-  discountTag: {
-    paddingHorizontal: 8,
+  categoryBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
+    borderRadius: 12,
+    marginBottom: 6,
   },
-  discountText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  hotelName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 2,
-  },
-  hotelLocation: {
+  categoryText: {
+    color: "#fff",
     fontSize: 11,
-    color: '#666',
-    lineHeight: 14,
+    fontWeight: "600",
   },
-  favoriteButton: {
-    padding: 4,
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#333",
   },
-  hotelFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
+  cardAddress: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 8,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  starIcon: {
-    marginRight: 2,
+  starFull: {
+    fontSize: 18,
+    color: "#FFB800",
   },
-  availabilityButton: {
-    backgroundColor: '#0066FF',
+  starEmpty: {
+    fontSize: 18,
+    color: "#E0E0E0",
+  },
+  detailButton: {
+    backgroundColor: "#2196F3",
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 7,
+    borderRadius: 18,
   },
-  availabilityText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
+  detailButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
-  downloadButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  favoriteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
-  downloadButtonInner: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  favoriteIcon: {
+    fontSize: 20,
+    color: "#333",
+  },
+  favoriteIconActive: {
+    color: "#FF4D4D",
   },
 });
 

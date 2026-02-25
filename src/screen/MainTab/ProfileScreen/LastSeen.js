@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -45,45 +45,115 @@ const LastSeen = ({ navigation }) => {
   const hotels = [
     {
       id: 1,
-      name: 'Depo Bay',
-      location: 'Jln. Dirgantara No.16 Blok G, Depok, Jawa Barat Indonesia',
-      rating: 0,
+      name: 'Curug Cipendok',
+      location: 'Desa Karangtengah, Cilongok',
+      category: 'Wisata Alam',
+      rating: 4.5,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-      priceLabel: 'Lihat Ketersediaan'
     },
     {
       id: 2,
-      name: 'Depo Bay',
-      location: 'Jln. Dirgantara No.16 Blok G, Depok, Jawa Barat Indonesia',
-      rating: 0,
+      name: 'Baturraden',
+      location: 'Banyumas, Jawa Tengah',
+      category: 'Wisata Alam',
+      rating: 4.8,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-      priceLabel: 'Lihat Ketersediaan'
     },
     {
       id: 3,
-      name: 'Depo Bay',
-      location: 'Jln. Dirgantara No.16 Blok G, Depok, Jawa Barat Indonesia',
-      rating: 0,
+      name: 'Hotel Santika',
+      location: 'Purwokerto, Jawa Tengah',
+      category: 'Penginapan',
+      rating: 4.3,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-      priceLabel: 'Lihat Ketersediaan'
     },
     {
       id: 4,
-      name: 'Depo Bay',
-      location: 'Jln. Dirgantara No.16 Blok G, Depok, Jawa Barat Indonesia',
-      rating: 0,
+      name: 'Sate Buntel',
+      location: 'Purwokerto, Jawa Tengah',
+      category: 'Kuliner',
+      rating: 4.7,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-      priceLabel: 'Lihat Ketersediaan'
     },
     {
       id: 5,
-      name: 'Depo Bay',
-      location: 'Jln. Dirgantara No.16 Blok G, Depok, Jawa Barat Indonesia',
-      rating: 0,
+      name: 'Desa Wisata Karangbanjar',
+      location: 'Banyumas, Jawa Tengah',
+      category: 'Desa Wisata',
+      rating: 4.6,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-      priceLabel: 'Lihat Ketersediaan'
     },
   ];
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(
+          <Text key={i} style={styles.starFull}>★</Text>
+        );
+      } else {
+        stars.push(
+          <Text key={i} style={styles.starEmpty}>★</Text>
+        );
+      }
+    }
+    return stars;
+  };
+
+  const getCategoryBadgeColor = (category) => {
+    const colors = {
+      "Wisata Alam": "#FF5757",
+      "Wisata Buatan": "#FF5757",
+      "Kuliner": "#FF8C42",
+      "Penginapan": "#4CAF50",
+      "Oleh-oleh": "#9C27B0",
+      "Desa Wisata": "#2196F3",
+      "Biro Perjalanan": "#FF6B9D",
+    };
+    return colors[category] || "#FF5757";
+  };
+
+  const renderCard = (hotel) => (
+    <View key={hotel.id} style={styles.card}>
+      <Image 
+        source={{ uri: hotel.image }}
+        style={styles.cardImage}
+        resizeMode="cover"
+      />
+
+      <View style={styles.cardContent}>
+        <View
+          style={[
+            styles.categoryBadge,
+            { backgroundColor: getCategoryBadgeColor(hotel.category) },
+          ]}
+        >
+          <Text style={styles.categoryText}>{hotel.category}</Text>
+        </View>
+
+        <Text style={styles.cardTitle}>{hotel.name}</Text>
+        <Text style={styles.cardAddress}>{hotel.location}</Text>
+
+        <View style={styles.cardFooter}>
+          <View style={styles.ratingContainer}>
+            {renderStars(hotel.rating)}
+          </View>
+
+          <TouchableOpacity
+            style={styles.detailButton}
+            onPress={() => navigation.navigate("Detail", { item: hotel })}
+          >
+            <Text style={styles.detailButtonText}>Lihat selengkapnya</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.favoriteButton}>
+        <Text style={styles.favoriteIcon}>♡</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -161,58 +231,6 @@ const LastSeen = ({ navigation }) => {
     return days;
   };
 
-  const renderHotelCard = (hotel) => (
-    <View key={hotel.id} style={styles.hotelCard}>
-      <View style={styles.cardContent}>
-        <Image 
-          source={{ uri: hotel.image }}
-          style={styles.hotelImage}
-          resizeMode="cover"
-        />
-        <View style={styles.hotelInfo}>
-          <View style={styles.hotelHeader}>
-            <View style={styles.headerLeft}>
-              <View style={styles.tagContainer}>
-                <LinearGradient
-                  colors={['#FF4D4D', '#CC0000']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.discountTag}
-                >
-                  <Text style={styles.discountText}>25% OFF</Text>
-                </LinearGradient>
-              </View>
-              <Text style={styles.hotelName}>{hotel.name}</Text>
-              <Text style={styles.hotelLocation} numberOfLines={2}>
-                {hotel.location}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Ionicons name="heart-outline" size={22} color="#000" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.hotelFooter}>
-            <View style={styles.ratingContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons 
-                  key={star} 
-                  name="star-outline" 
-                  size={14} 
-                  color="#FFB800" 
-                  style={styles.starIcon}
-                />
-              ))}
-            </View>
-            <TouchableOpacity style={styles.availabilityButton}>
-              <Text style={styles.availabilityText}>{hotel.priceLabel}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
     <LinearGradient
       colors={['#C5E3F6', '#E5F2FA', '#FFFFFF']}
@@ -254,7 +272,7 @@ const LastSeen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {hotels.map(hotel => renderHotelCard(hotel))}
+          {hotels.map(hotel => renderCard(hotel))}
         </ScrollView>
       </SafeAreaView>
 
@@ -404,92 +422,104 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  hotelCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+  
+  // Card Styles - SAMA SEPERTI DI HOME SCREEN
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 15,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
+    shadowRadius: 6,
+    elevation: 4,
+    position: "relative",
+  },
+  cardImage: {
+    width: 95,
+    height: 95,
+    borderRadius: 16,
+    resizeMode: "cover",
   },
   cardContent: {
-    flexDirection: 'row',
-    padding: 12,
-  },
-  hotelImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  hotelInfo: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
+    paddingLeft: 12,
+    justifyContent: "space-between",
   },
-  hotelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  tagContainer: {
-    marginBottom: 4,
-  },
-  discountTag: {
-    paddingHorizontal: 8,
+  categoryBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
+    borderRadius: 12,
+    marginBottom: 6,
   },
-  discountText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  hotelName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 2,
-  },
-  hotelLocation: {
+  categoryText: {
+    color: "#fff",
     fontSize: 11,
-    color: '#666',
-    lineHeight: 14,
+    fontWeight: "600",
   },
-  favoriteButton: {
-    padding: 4,
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#333",
   },
-  hotelFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
+  cardAddress: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 8,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  starIcon: {
-    marginRight: 2,
+  starFull: {
+    fontSize: 18,
+    color: "#FFB800",
   },
-  availabilityButton: {
-    backgroundColor: '#0066FF',
+  starEmpty: {
+    fontSize: 18,
+    color: "#E0E0E0",
+  },
+  detailButton: {
+    backgroundColor: "#2196F3",
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 7,
+    borderRadius: 18,
   },
-  availabilityText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
+  detailButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
+  favoriteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  favoriteIcon: {
+    fontSize: 20,
+    color: "#333",
+  },
+  
+  // Modal Styles (tetap sama)
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
