@@ -232,141 +232,162 @@ const LastSeen = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#C5E3F6', '#E5F2FA', '#FFFFFF']}
-      locations={[0, 0.3, 1]}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Terakhir dilihat</Text>
-          <TouchableOpacity style={styles.searchButton}>
-            <Ionicons name="search" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
+		<LinearGradient
+			colors={["#72b8f6", "#a7d4fc", "#E6F2FF"]}
+			locations={[0, 0.3, 1]}
+			style={styles.container}
+		>
+			<SafeAreaView style={styles.safeArea}>
+				{/* Header */}
+				<View style={styles.header}>
+					<TouchableOpacity
+						style={styles.backButton}
+						onPress={() => navigation.goBack()}
+					>
+						<Ionicons name="arrow-back" size={24} color="#000" />
+					</TouchableOpacity>
+					<Text style={styles.headerTitle}>Terakhir dilihat</Text>
+					<TouchableOpacity style={styles.searchButton}>
+						<Ionicons name="search" size={24} color="#000" />
+					</TouchableOpacity>
+				</View>
 
-        {/* Filter Button */}
-        <View style={styles.filterContainer}>
-          <TouchableOpacity 
-            style={styles.filterButton}
-            onPress={() => {
-              setTempSelectedFilter(selectedFilter);
-              setShowFilterModal(true);
-            }}
-          >
-            <Text style={styles.filterText}>Filter berdasarkan tanggal</Text>
-            <Ionicons name="chevron-down" size={18} color="#000" />
-          </TouchableOpacity>
-        </View>
+				{/* Filter Button */}
+				<View style={styles.filterContainer}>
+					<TouchableOpacity
+						style={styles.filterButton}
+						onPress={() => {
+							setTempSelectedFilter(selectedFilter);
+							setShowFilterModal(true);
+						}}
+					>
+						<Text style={styles.filterText}>Filter berdasarkan tanggal</Text>
+						<Ionicons name="chevron-down" size={18} color="#000" />
+					</TouchableOpacity>
+				</View>
 
-        {/* Hotel List */}
-        <ScrollView 
-          style={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {hotels.map(hotel => renderCard(hotel))}
-        </ScrollView>
-      </SafeAreaView>
+				{/* Hotel List */}
+				<ScrollView
+					style={styles.contentContainer}
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={styles.scrollContent}
+				>
+					{hotels.map((hotel) => renderCard(hotel))}
+				</ScrollView>
+			</SafeAreaView>
 
-      {/* Filter Modal */}
-      <Modal
-        visible={showFilterModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowFilterModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Filter berdasarkan tanggal</Text>
-              <TouchableOpacity onPress={applyFilter}>
-                <Ionicons name="checkmark" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
+			{/* Filter Modal */}
+			<Modal
+				visible={showFilterModal}
+				transparent={true}
+				animationType="slide"
+				onRequestClose={() => setShowFilterModal(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<View style={styles.modalHeader}>
+							<TouchableOpacity onPress={() => setShowFilterModal(false)}>
+								<Ionicons name="close" size={24} color="#000" />
+							</TouchableOpacity>
+							<Text style={styles.modalTitle}>Filter berdasarkan tanggal</Text>
+							<TouchableOpacity onPress={applyFilter}>
+								<Ionicons name="checkmark" size={24} color="#000" />
+							</TouchableOpacity>
+						</View>
 
-            {!showDatePicker ? (
-              <View style={styles.filterOptions}>
-                {filterOptions.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.filterOption}
-                    onPress={() => {
-                      if (option.value === 'range') {
-                        setShowDatePicker(true);
-                      } else {
-                        setTempSelectedFilter(option.label);
-                      }
-                    }}
-                  >
-                    <Text style={styles.filterOptionText}>{option.label}</Text>
-                    <View style={styles.filterOptionRight}>
-                      {tempSelectedFilter === option.label && !option.hasArrow && (
-                        <View style={styles.radioSelected} />
-                      )}
-                      {option.hasArrow && (
-                        <Ionicons name="chevron-forward" size={20} color="#666" />
-                      )}
-                      {tempSelectedFilter !== option.label && !option.hasArrow && (
-                        <View style={styles.radioUnselected} />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <View style={styles.datePickerContainer}>
-                <View style={styles.monthNavigation}>
-                  <TouchableOpacity 
-                    onPress={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  >
-                    <Ionicons name="chevron-back" size={24} color="#000" />
-                  </TouchableOpacity>
-                  <Text style={styles.monthYear}>
-                    {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                  </Text>
-                  <TouchableOpacity 
-                    onPress={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  >
-                    <Ionicons name="chevron-forward" size={24} color="#000" />
-                  </TouchableOpacity>
-                </View>
+						{!showDatePicker ? (
+							<View style={styles.filterOptions}>
+								{filterOptions.map((option, index) => (
+									<TouchableOpacity
+										key={index}
+										style={styles.filterOption}
+										onPress={() => {
+											if (option.value === "range") {
+												setShowDatePicker(true);
+											} else {
+												setTempSelectedFilter(option.label);
+											}
+										}}
+									>
+										<Text style={styles.filterOptionText}>{option.label}</Text>
+										<View style={styles.filterOptionRight}>
+											{tempSelectedFilter === option.label &&
+												!option.hasArrow && (
+													<View style={styles.radioSelected} />
+												)}
+											{option.hasArrow && (
+												<Ionicons
+													name="chevron-forward"
+													size={20}
+													color="#666"
+												/>
+											)}
+											{tempSelectedFilter !== option.label &&
+												!option.hasArrow && (
+													<View style={styles.radioUnselected} />
+												)}
+										</View>
+									</TouchableOpacity>
+								))}
+							</View>
+						) : (
+							<View style={styles.datePickerContainer}>
+								<View style={styles.monthNavigation}>
+									<TouchableOpacity
+										onPress={() =>
+											setCurrentMonth(
+												new Date(
+													currentMonth.getFullYear(),
+													currentMonth.getMonth() - 1,
+												),
+											)
+										}
+									>
+										<Ionicons name="chevron-back" size={24} color="#000" />
+									</TouchableOpacity>
+									<Text style={styles.monthYear}>
+										{monthNames[currentMonth.getMonth()]}{" "}
+										{currentMonth.getFullYear()}
+									</Text>
+									<TouchableOpacity
+										onPress={() =>
+											setCurrentMonth(
+												new Date(
+													currentMonth.getFullYear(),
+													currentMonth.getMonth() + 1,
+												),
+											)
+										}
+									>
+										<Ionicons name="chevron-forward" size={24} color="#000" />
+									</TouchableOpacity>
+								</View>
 
-                <View style={styles.calendar}>
-                  <View style={styles.weekDays}>
-                    {dayNames.map((day, index) => (
-                      <Text key={index} style={styles.weekDayText}>{day}</Text>
-                    ))}
-                  </View>
-                  <View style={styles.daysGrid}>
-                    {renderDatePicker()}
-                  </View>
-                </View>
+								<View style={styles.calendar}>
+									<View style={styles.weekDays}>
+										{dayNames.map((day, index) => (
+											<Text key={index} style={styles.weekDayText}>
+												{day}
+											</Text>
+										))}
+									</View>
+									<View style={styles.daysGrid}>{renderDatePicker()}</View>
+								</View>
 
-                {(tempStartDate || tempEndDate) && (
-                  <View style={styles.selectedDateRange}>
-                    <Text style={styles.selectedDateRangeText}>
-                      {formatDateRange(tempStartDate, tempEndDate)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
-    </LinearGradient>
-  );
+								{(tempStartDate || tempEndDate) && (
+									<View style={styles.selectedDateRange}>
+										<Text style={styles.selectedDateRangeText}>
+											{formatDateRange(tempStartDate, tempEndDate)}
+										</Text>
+									</View>
+								)}
+							</View>
+						)}
+					</View>
+				</View>
+			</Modal>
+		</LinearGradient>
+	);
 };
 
 const styles = StyleSheet.create({

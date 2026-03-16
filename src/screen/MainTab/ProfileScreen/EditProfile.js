@@ -47,14 +47,14 @@ const EditProfile = ({ navigation, route }) => {
 
   // Default theme (light theme)
   const theme = {
-    gradientColors: ['#FFFFFF', '#F0F8FF', '#E6F2FF'],
-    card: '#FFFFFF',
-    text: '#000000',
-    textSecondary: '#666666',
-    primary: '#007AFF',
-    inputBackground: '#F5F5F5',
-    border: '#E0E0E0'
-  };
+		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
+		card: "#FFFFFF",
+		text: "#000000",
+		textSecondary: "#666666",
+		primary: "#007AFF",
+		inputBackground: "#F5F5F5",
+		border: "#E0E0E0",
+	};
 
   const [profileImage, setProfileImage] = useState(currentImage);
   const [showImageOptions, setShowImageOptions] = useState(false);

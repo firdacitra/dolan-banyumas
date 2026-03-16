@@ -56,122 +56,124 @@ const Account = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#C5E3F6', '#E5F2FA', '#FFFFFF']}
-      locations={[0, 0.3, 1]}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{i18n.t('account')}</Text>
-          </View>
+		<LinearGradient
+			colors={["#72b8f6", "#a7d4fc", "#E6F2FF"]}
+			locations={[0, 0.3, 1]}
+			style={styles.container}
+		>
+			<SafeAreaView style={styles.safeArea}>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<View style={styles.header}>
+						<TouchableOpacity
+							style={styles.backButton}
+							onPress={() => navigation.goBack()}
+						>
+							<Ionicons name="arrow-back" size={24} color="#000" />
+						</TouchableOpacity>
+						<Text style={styles.headerTitle}>{i18n.t("account")}</Text>
+					</View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{i18n.t('account')}</Text>
-            
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => setShowLogoutModal(true)}
-            >
-              <View style={styles.menuLeft}>
-                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-                <Text style={[styles.menuText, { color: '#FF3B30' }]}>
-                  {i18n.t('logout')}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#FF3B30" />
-            </TouchableOpacity>
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>{i18n.t("account")}</Text>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => setShowDeleteModal(true)}
-            >
-              <View style={styles.menuLeft}>
-                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-                <Text style={[styles.menuText, { color: '#FF3B30' }]}>
-                  {i18n.t('deleteAccount')}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#FF3B30" />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => setShowLogoutModal(true)}
+						>
+							<View style={styles.menuLeft}>
+								<Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+								<Text style={[styles.menuText, { color: "#FF3B30" }]}>
+									{i18n.t("logout")}
+								</Text>
+							</View>
+							<Ionicons name="chevron-forward" size={18} color="#FF3B30" />
+						</TouchableOpacity>
 
-      {/* Modal Logout */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showLogoutModal}
-        onRequestClose={() => setShowLogoutModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{i18n.t('logoutConfirmation')}</Text>
-            <Text style={styles.modalMessage}>
-              {i18n.t('logoutConfirm')}
-            </Text>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowLogoutModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>{i18n.t('no')}</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleLogout}
-              >
-                <Text style={styles.confirmButtonText}>{i18n.t('yes')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => setShowDeleteModal(true)}
+						>
+							<View style={styles.menuLeft}>
+								<Ionicons name="trash-outline" size={20} color="#FF3B30" />
+								<Text style={[styles.menuText, { color: "#FF3B30" }]}>
+									{i18n.t("deleteAccount")}
+								</Text>
+							</View>
+							<Ionicons name="chevron-forward" size={18} color="#FF3B30" />
+						</TouchableOpacity>
+					</View>
+				</ScrollView>
+			</SafeAreaView>
 
-      {/* Modal Delete Account */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showDeleteModal}
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{i18n.t('deleteAccountConfirmation')}</Text>
-            <Text style={styles.modalMessage}>
-              {i18n.t('deleteAccountConfirm')}
-            </Text>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowDeleteModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>{i18n.t('no')}</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleDeleteAccount}
-              >
-                <Text style={styles.confirmButtonText}>{i18n.t('yes')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </LinearGradient>
-  );
+			{/* Modal Logout */}
+			<Modal
+				animationType="fade"
+				transparent={true}
+				visible={showLogoutModal}
+				onRequestClose={() => setShowLogoutModal(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>
+							{i18n.t("logoutConfirmation")}
+						</Text>
+						<Text style={styles.modalMessage}>{i18n.t("logoutConfirm")}</Text>
+
+						<View style={styles.modalButtons}>
+							<TouchableOpacity
+								style={[styles.modalButton, styles.cancelButton]}
+								onPress={() => setShowLogoutModal(false)}
+							>
+								<Text style={styles.cancelButtonText}>{i18n.t("no")}</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[styles.modalButton, styles.confirmButton]}
+								onPress={handleLogout}
+							>
+								<Text style={styles.confirmButtonText}>{i18n.t("yes")}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
+
+			{/* Modal Delete Account */}
+			<Modal
+				animationType="fade"
+				transparent={true}
+				visible={showDeleteModal}
+				onRequestClose={() => setShowDeleteModal(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>
+							{i18n.t("deleteAccountConfirmation")}
+						</Text>
+						<Text style={styles.modalMessage}>
+							{i18n.t("deleteAccountConfirm")}
+						</Text>
+
+						<View style={styles.modalButtons}>
+							<TouchableOpacity
+								style={[styles.modalButton, styles.cancelButton]}
+								onPress={() => setShowDeleteModal(false)}
+							>
+								<Text style={styles.cancelButtonText}>{i18n.t("no")}</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[styles.modalButton, styles.confirmButton]}
+								onPress={handleDeleteAccount}
+							>
+								<Text style={styles.confirmButtonText}>{i18n.t("yes")}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
+		</LinearGradient>
+	);
 };
 
 const styles = StyleSheet.create({

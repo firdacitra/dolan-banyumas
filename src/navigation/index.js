@@ -1,9 +1,9 @@
-// src/navigation/index.js
+import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AppNavigator from "./app";
-
-// Import semua screen untuk stack navigation
+import { FavoritesProvider } from "../context/FavoriteContext";
 import LoginScreen from "../screen/LoginScreen";
+import RegisterScreen from "../screen/RegisterScreen";
 import SplashScreen from "../screen/SplashScreen";
 import LastSeen from "../screen/MainTab/ProfileScreen/LastSeen";
 import Favorites from "../screen/MainTab/ProfileScreen/Favorites";
@@ -18,28 +18,32 @@ import Detail from "../screen/Detail";
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigation() {
-  return (
-    <Stack.Navigator
-      initialRouteName="Splash"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      
-      {/* Main Tab sebagai home */}
-      <Stack.Screen name="MainTab" component={AppNavigator} />
-      
-      {/* Profile Stack Screens */}
-      <Stack.Screen name="LastSeen" component={LastSeen} />
-      <Stack.Screen name="Favorites" component={Favorites} />
-      <Stack.Screen name="Language" component={Language} />
-      <Stack.Screen name="Accessibility" component={Accessibility} />
-      <Stack.Screen name="Rating" component={Rating} />
-      <Stack.Screen name="Account" component={Account} />
-      <Stack.Screen name="EditProfile" component={EditProfile} />
-      
-      <Stack.Screen name="MenuList" component={MenuList} />
-      <Stack.Screen name="Detail" component={Detail} />
-    </Stack.Navigator>
-  );
+	return (
+		<FavoritesProvider>
+			{" "}
+			<Stack.Navigator
+				initialRouteName="Splash"
+				screenOptions={{ headerShown: false }}
+			>
+				<Stack.Screen name="Splash" component={SplashScreen} />
+				<Stack.Screen name="Login" component={LoginScreen} />
+				<Stack.Screen name="Register" component={RegisterScreen} />
+
+				{/* Main Tab = home screen */}
+				<Stack.Screen name="MainTab" component={AppNavigator} />
+
+				{/* Profile stack screen */}
+				<Stack.Screen name="LastSeen" component={LastSeen} />
+				<Stack.Screen name="Favorites" component={Favorites} />
+				<Stack.Screen name="Language" component={Language} />
+				<Stack.Screen name="Accessibility" component={Accessibility} />
+				<Stack.Screen name="Rating" component={Rating} />
+				<Stack.Screen name="Account" component={Account} />
+				<Stack.Screen name="EditProfile" component={EditProfile} />
+
+				<Stack.Screen name="MenuList" component={MenuList} />
+				<Stack.Screen name="Detail" component={Detail} />
+			</Stack.Navigator>
+		</FavoritesProvider>
+	);
 }

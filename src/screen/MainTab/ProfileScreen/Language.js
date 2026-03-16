@@ -60,92 +60,94 @@ const Language = ({ navigation }) => {
   const otherLanguages = languages.filter(lang => lang.section === 'other');
 
   return (
-    <LinearGradient
-      colors={['#C5E3F6', '#E5F2FA', '#FFFFFF']}
-      locations={[0, 0.3, 1]}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{i18n.t('chooseLanguage')}</Text>
-          </View>
+		<LinearGradient
+			colors={["#72b8f6", "#a7d4fc", "#E6F2FF"]}
+			locations={[0, 0.3, 1]}
+			style={styles.container}
+		>
+			<SafeAreaView style={styles.safeArea}>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<View style={styles.header}>
+						<TouchableOpacity
+							style={styles.backButton}
+							onPress={() => navigation.goBack()}
+						>
+							<Ionicons name="arrow-back" size={24} color="#000" />
+						</TouchableOpacity>
+						<Text style={styles.headerTitle}>{i18n.t("chooseLanguage")}</Text>
+					</View>
 
-          <View style={styles.content}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{i18n.t('mainLanguage')}</Text>
-              {mainLanguages.map((lang) => (
-                <TouchableOpacity
-                  key={lang.code}
-                  style={styles.languageItem}
-                  onPress={() => handleLanguagePress(lang.code)}
-                >
-                  <Text style={styles.languageText}>{lang.name}</Text>
-                  {currentLanguage === lang.code && (
-                    <Ionicons name="checkmark" size={24} color="#000" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+					<View style={styles.content}>
+						<View style={styles.section}>
+							<Text style={styles.sectionTitle}>{i18n.t("mainLanguage")}</Text>
+							{mainLanguages.map((lang) => (
+								<TouchableOpacity
+									key={lang.code}
+									style={styles.languageItem}
+									onPress={() => handleLanguagePress(lang.code)}
+								>
+									<Text style={styles.languageText}>{lang.name}</Text>
+									{currentLanguage === lang.code && (
+										<Ionicons name="checkmark" size={24} color="#000" />
+									)}
+								</TouchableOpacity>
+							))}
+						</View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{i18n.t('otherLanguages')}</Text>
-              {otherLanguages.map((lang) => (
-                <TouchableOpacity
-                  key={lang.code}
-                  style={styles.languageItem}
-                  onPress={() => handleLanguagePress(lang.code)}
-                >
-                  <Text style={styles.languageText}>{lang.name}</Text>
-                  {currentLanguage === lang.code && (
-                    <Ionicons name="checkmark" size={24} color="#000" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+						<View style={styles.section}>
+							<Text style={styles.sectionTitle}>
+								{i18n.t("otherLanguages")}
+							</Text>
+							{otherLanguages.map((lang) => (
+								<TouchableOpacity
+									key={lang.code}
+									style={styles.languageItem}
+									onPress={() => handleLanguagePress(lang.code)}
+								>
+									<Text style={styles.languageText}>{lang.name}</Text>
+									{currentLanguage === lang.code && (
+										<Ionicons name="checkmark" size={24} color="#000" />
+									)}
+								</TouchableOpacity>
+							))}
+						</View>
+					</View>
+				</ScrollView>
+			</SafeAreaView>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showConfirmation}
-        onRequestClose={() => setShowConfirmation(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{i18n.t('confirmation')}</Text>
-            <Text style={styles.modalMessage}>
-              {i18n.t('changeLanguageConfirm')}
-            </Text>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.modalButton}
-                onPress={() => setShowConfirmation(false)}
-              >
-                <Text style={styles.cancelButtonText}>{i18n.t('cancel')}</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.modalButton}
-                onPress={confirmLanguageChange}
-              >
-                <Text style={styles.confirmButtonText}>{i18n.t('ok')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </LinearGradient>
-  );
+			<Modal
+				animationType="fade"
+				transparent={true}
+				visible={showConfirmation}
+				onRequestClose={() => setShowConfirmation(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>{i18n.t("confirmation")}</Text>
+						<Text style={styles.modalMessage}>
+							{i18n.t("changeLanguageConfirm")}
+						</Text>
+
+						<View style={styles.modalButtons}>
+							<TouchableOpacity
+								style={styles.modalButton}
+								onPress={() => setShowConfirmation(false)}
+							>
+								<Text style={styles.cancelButtonText}>{i18n.t("cancel")}</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={styles.modalButton}
+								onPress={confirmLanguageChange}
+							>
+								<Text style={styles.confirmButtonText}>{i18n.t("ok")}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
+		</LinearGradient>
+	);
 };
 
 const styles = StyleSheet.create({

@@ -42,12 +42,12 @@ const ProfileScreen = ({ navigation, route }) => {
 
   // Default theme (light theme)
   const theme = {
-    gradientColors: ['#FFFFFF', '#F0F8FF', '#E6F2FF'],
-    card: '#FFFFFF',
-    text: '#000000',
-    textSecondary: '#666666',
-    primary: '#007AFF'
-  };
+		gradientColors: ["#24ccff", "#aaf1ff", "#e0efff"],
+		card: "#FFFFFF",
+		text: "#000000",
+		textSecondary: "#666666",
+		primary: "#057eff",
+	};
 
   // State untuk data profil
   const [profileData, setProfileData] = useState({

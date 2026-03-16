@@ -1,5 +1,4 @@
-// src/screen/HomeScreen/index.js
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
 	View,
 	Text,
@@ -8,71 +7,40 @@ import {
 	Image,
 	TouchableOpacity,
 	Dimensions,
-	FlatList,
+	Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons"; 
 import { getRecommendations } from "../../../constant/dataMenu/index.js";
+import { eventData } from "../../../constant/dataEvent/index.js";
+import { useFavorites } from "../../../context/FavoriteContext";
 
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
 	const navigation = useNavigation();
-	const [activeSlide, setActiveSlide] = React.useState(0);
+	const { isFavorite, toggleFavorite } = useFavorites();
+
+	const [activeSlide, setActiveSlide] = useState(0);
 	const scrollViewRef = useRef(null);
+	const [isLogin, setIsLogin] = useState(false);
 
 	const recommendations = getRecommendations(5);
+	const bannerImages = eventData;
 
-	const menuCategories = [
-		{
-			id: 1,
-			title: "Objek Wisata",
-			icon: require("../../../assets/logo_wisata.png"),
-			route: "MenuList",
-			params: { category: "objekWisata" },
-		},
-		{
-			id: 2,
-			title: "Kuliner",
-			icon: require("../../../assets/logo_kuliner.png"),
-			route: "MenuList",
-			params: { category: "kuliner" },
-		},
-		{
-			id: 3,
-			title: "Penginapan",
-			icon: require("../../../assets/logo_penginapan.png"),
-			route: "MenuList",
-			params: { category: "penginapan" },
-		},
-		{
-			id: 4,
-			title: "Oleh-oleh",
-			icon: require("../../../assets/logo_oleh2.png"),
-			route: "MenuList",
-			params: { category: "olehOleh" },
-		},
-		{
-			id: 5,
-			title: "Desa Wisata",
-			icon: require("../../../assets/logo_desa.png"),
-			route: "MenuList",
-			params: { category: "desaWisata" },
-		},
-		{
-			id: 6,
-			title: "Biro Perjalanan",
-			icon: require("../../../assets/logo_biro.png"),
-			route: "MenuList",
-			params: { category: "biroPerjalanan" },
-		},
-	];
+	useEffect(() => {
+		checkLogin();
+		const unsubscribe = navigation.addListener("focus", checkLogin);
+		return unsubscribe;
+	}, [navigation]);
 
-	const bannerImages = [
-		require("../../../assets/logo.png"),
-		require("../../../assets/depo bay.jpg"),
-		require("../../../assets/depo bay.jpg"),
-	];
+	const checkLogin = async () => {
+		const status = await AsyncStorage.getItem("isLogin");
+		setIsLogin(status === "true");
+	};
 
 	const handleScroll = (event) => {
 		const slideSize = event.nativeEvent.layoutMeasurement.width;
@@ -123,114 +91,204 @@ const HomeScreen = () => {
 		return colors[category] || "#FF5757";
 	};
 
+	const handleLikePress = async (item) => {
+		const loginStatus = await AsyncStorage.getItem("isLogin");
+
+		if (loginStatus !== "true") {
+			Alert.alert(
+				"Belum Login",
+				"Anda harus login terlebih dahulu untuk menyukai item",
+				[
+					{ text: "Batal", style: "cancel" },
+					{ text: "Login", onPress: () => navigation.navigate("Login") },
+				],
+			);
+			return;
+		}
+
+		const result = await toggleFavorite(item);
+		if (result && result.message) {
+			Alert.alert("Info", result.message);
+		}
+	};
+
+	const menuCategories = [
+		{
+			id: 1,
+			title: "Objek Wisata",
+			icon: require("../../../assets/logo_wisata.png"),
+			route: "MenuList",
+			params: { category: "objekWisata" },
+		},
+		{
+			id: 2,
+			title: "Kuliner",
+			icon: require("../../../assets/logo_kuliner.png"),
+			route: "MenuList",
+			params: { category: "kuliner" },
+		},
+		{
+			id: 3,
+			title: "Penginapan",
+			icon: require("../../../assets/logo_penginapan.png"),
+			route: "MenuList",
+			params: { category: "penginapan" },
+		},
+		{
+			id: 4,
+			title: "Oleh-oleh",
+			icon: require("../../../assets/logo_oleh2.jpeg"),
+			route: "MenuList",
+			params: { category: "olehOleh" },
+		},
+		{
+			id: 5,
+			title: "Desa Wisata",
+			icon: require("../../../assets/logo_desaWisata.jpeg"),
+			route: "MenuList",
+			params: { category: "desaWisata" },
+		},
+		{
+			id: 6,
+			title: "Biro Perjalanan",
+			icon: require("../../../assets/logo_biro.png"),
+			route: "MenuList",
+			params: { category: "biroPerjalanan" },
+		},
+	];
+
 	return (
-		<SafeAreaView style={styles.container}>
-			<ScrollView showsVerticalScrollIndicator={false}>
-				{/* Header */}
-				<View style={styles.header}>
-					<Text style={styles.headerTitle}>Dolan Banyumas</Text>
-					<TouchableOpacity style={styles.loginButton}>
-						<Text style={styles.loginText}>Login</Text>
-					</TouchableOpacity>
-				</View>
+		<LinearGradient
+			colors={["#24ccff", "#aaf1ff", "#e0efff"]}
+			style={{ flex: 1 }}
+		>
+			<SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<View style={styles.header}>
+						<Text style={styles.headerTitle}>Dolan Banyumas</Text>
+						{!isLogin && (
+							<TouchableOpacity
+								style={styles.loginButton}
+								onPress={() => navigation.navigate("Login")}
+							>
+								<Text style={styles.loginText}>Login</Text>
+							</TouchableOpacity>
+						)}
+					</View>
 
-				{/* Banner Carousel */}
-				<View style={styles.bannerContainer}>
-					<ScrollView
-						ref={scrollViewRef}
-						horizontal
-						pagingEnabled
-						showsHorizontalScrollIndicator={false}
-						onScroll={handleScroll}
-						scrollEventThrottle={16}
-					>
-						{bannerImages.map((image, index) => (
-							<View key={index} style={styles.bannerSlide}>
-								<Image source={image} style={styles.bannerImage} />
-							</View>
-						))}
-					</ScrollView>
+					{/* Banner */}
+					<View style={styles.bannerContainer}>
+						<ScrollView
+							ref={scrollViewRef}
+							horizontal
+							pagingEnabled
+							showsHorizontalScrollIndicator={false}
+							onScroll={handleScroll}
+							scrollEventThrottle={16}
+						>
+							{bannerImages.map((item) => (
+								<TouchableOpacity
+									key={item.id}
+									style={styles.bannerSlide}
+									activeOpacity={0.9}
+									onPress={() => navigation.navigate("Detail", { item })}
+								>
+									<View style={styles.bannerImageContainer}>
+										<Image source={item.image} style={styles.bannerImage} />
+									</View>
+								</TouchableOpacity>
+							))}
+						</ScrollView>
+						<View style={styles.dotsContainer}>
+							{bannerImages.map((_, index) => (
+								<View
+									key={index}
+									style={[
+										styles.dot,
+										activeSlide === index && styles.activeDot,
+									]}
+								/>
+							))}
+						</View>
+					</View>
 
-					{/* Dots Indicator */}
-					<View style={styles.dotsContainer}>
-						{bannerImages.map((_, index) => (
-							<View
-								key={index}
-								style={[styles.dot, activeSlide === index && styles.activeDot]}
-							/>
+					{/* Menu Kategori */}
+					<View style={styles.menuGrid}>
+						{menuCategories.map((menu) => (
+							<TouchableOpacity
+								key={menu.id}
+								style={styles.menuItem}
+								onPress={() => navigation.navigate(menu.route, menu.params)}
+							>
+								<View style={styles.menuIconContainer}>
+									<Image source={menu.icon} style={styles.menuIcon} />
+								</View>
+								<Text style={styles.menuTitle}>{menu.title}</Text>
+							</TouchableOpacity>
 						))}
 					</View>
-				</View>
 
-				{/* Menu Categories */}
-				<View style={styles.menuGrid}>
-					{menuCategories.map((menu) => (
-						<TouchableOpacity
-							key={menu.id}
-							style={styles.menuItem}
-							onPress={() => navigation.navigate(menu.route, menu.params)}
-						>
-							<View style={styles.menuIconContainer}>
-								<Image source={menu.icon} style={styles.menuIcon} />
-							</View>
-							<Text style={styles.menuTitle}>{menu.title}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
+					{/* Rekomendasi */}
+					<View style={styles.recommendationSection}>
+						<Text style={styles.sectionTitle}>Rekomendasi buat kamu</Text>
 
-				{/* Recommendations Section */}
-				<View style={styles.recommendationSection}>
-					<Text style={styles.sectionTitle}>Rekomendasi buat kamu</Text>
+						{recommendations.map((item) => (
+							<View key={item.id} style={styles.card}>
+								<Image source={item.image} style={styles.cardImage} />
 
-					{recommendations.map((item) => (
-						<View key={item.id} style={styles.card}>
-							<Image source={item.image} style={styles.cardImage} />
-
-							<View style={styles.cardContent}>
-								<View
-									style={[
-										styles.categoryBadge,
-										{ backgroundColor: getCategoryBadgeColor(item.category) },
-									]}
-								>
-									<Text style={styles.categoryText}>{item.category}</Text>
-								</View>
-
-								<Text style={styles.cardTitle}>{item.name}</Text>
-								<Text style={styles.cardAddress}>{item.address}</Text>
-
-								<View style={styles.cardFooter}>
-									<View style={styles.ratingContainer}>
-										{renderStars(item.rating)}
+								<View style={styles.cardContent}>
+									<View
+										style={[
+											styles.categoryBadge,
+											{ backgroundColor: getCategoryBadgeColor(item.category) },
+										]}
+									>
+										<Text style={styles.categoryText}>{item.category}</Text>
 									</View>
 
-									<TouchableOpacity
-										style={styles.detailButton}
-										onPress={() => navigation.navigate("Detail", { item })}
-									>
-										<Text style={styles.detailButtonText}>
-											Lihat selengkapnya
-										</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
+									<Text style={styles.cardTitle}>{item.name}</Text>
+									<Text style={styles.cardAddress}>{item.address}</Text>
 
-							<TouchableOpacity style={styles.favoriteButton}>
-								<Text style={styles.favoriteIcon}>♡</Text>
-							</TouchableOpacity>
-						</View>
-					))}
-				</View>
-			</ScrollView>
-		</SafeAreaView>
+									<View style={styles.cardFooter}>
+										<View style={styles.ratingContainer}>
+											{renderStars(item.rating)}
+										</View>
+
+										<TouchableOpacity
+											style={styles.detailButton}
+											onPress={() => navigation.navigate("Detail", { item })}
+										>
+											<Text style={styles.detailButtonText}>
+												Lihat selengkapnya
+											</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+
+								{/* TOMBOL FAVORITE PAKAI IONICONS */}
+								<TouchableOpacity
+									style={[
+										styles.favoriteButton,
+										isFavorite(item.id) && styles.favoriteButtonActive,
+									]}
+									onPress={() => handleLikePress(item)}
+								>
+									<Ionicons
+										name={isFavorite(item.id) ? "heart" : "heart-outline"}
+										size={22}
+										color={isFavorite(item.id) ? "#FF3B30" : "#666"}
+									/>
+								</TouchableOpacity>
+							</View>
+						))}
+					</View>
+				</ScrollView>
+			</SafeAreaView>
+		</LinearGradient>
 	);
 };
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#E8F4F8",
-	},
 	header: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -261,18 +319,21 @@ const styles = StyleSheet.create({
 		width: width,
 		paddingHorizontal: 20,
 	},
-	bannerImage: {
+	bannerImageContainer: {
 		width: "100%",
 		height: 180,
 		borderRadius: 20,
-		resizeMode: "cover",
-		marginBottom: 10,
-		boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+		overflow: "hidden",
+	},
+	bannerImage: {
+		width: "100%",
+		height: 220,
+		position: "absolute",
+		top: 0,
 	},
 	dotsContainer: {
 		flexDirection: "row",
 		justifyContent: "center",
-		alignItems: "center",
 		marginTop: 15,
 	},
 	dot: {
@@ -298,21 +359,17 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 	},
 	menuIconContainer: {
-		width: 60,
-		height: 60,
-		borderRadius: 30,
+		width: 70,
+		height: 70,
+		borderRadius: 40,
 		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
 		elevation: 3,
 	},
 	menuIcon: {
-		width: 50,
-		height: 50,
+		width: 60,
+		height: 60,
 		resizeMode: "contain",
 		borderRadius: 25,
 	},
@@ -329,7 +386,6 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 17,
 		fontWeight: "bold",
-		color: "#333",
 		marginBottom: 15,
 	},
 	card: {
@@ -338,27 +394,19 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		marginBottom: 15,
 		padding: 15,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.1,
-		shadowRadius: 6,
 		elevation: 4,
 		position: "relative",
 	},
-
 	cardImage: {
 		width: 95,
 		height: 95,
 		borderRadius: 16,
-		resizeMode: "cover",
 	},
-
 	cardContent: {
 		flex: 1,
 		paddingLeft: 12,
 		justifyContent: "space-between",
 	},
-
 	categoryBadge: {
 		alignSelf: "flex-start",
 		paddingHorizontal: 10,
@@ -366,7 +414,6 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		marginBottom: 6,
 	},
-
 	categoryText: {
 		color: "#fff",
 		fontSize: 11,
@@ -375,15 +422,12 @@ const styles = StyleSheet.create({
 	cardTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#333",
 	},
-
 	cardAddress: {
 		fontSize: 12,
 		color: "#999",
 		marginBottom: 8,
 	},
-
 	cardFooter: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -391,9 +435,7 @@ const styles = StyleSheet.create({
 	},
 	ratingContainer: {
 		flexDirection: "row",
-		alignItems: "center",
 	},
-
 	starFull: {
 		fontSize: 18,
 		color: "#FFB800",
@@ -413,7 +455,6 @@ const styles = StyleSheet.create({
 		paddingVertical: 7,
 		borderRadius: 18,
 	},
-
 	detailButtonText: {
 		color: "#fff",
 		fontSize: 12,
@@ -423,22 +464,16 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		width: 30,
-		height: 30,
-		borderRadius: 15,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.2,
-		shadowRadius: 3,
 		elevation: 5,
 	},
-
-	favoriteIcon: {
-		fontSize: 24,
-		color: "#333",
+	favoriteButtonActive: {
+		backgroundColor: "#FFE5E5",
 	},
 });
 

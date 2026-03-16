@@ -29,16 +29,16 @@ const Accessibility = ({ navigation }) => {
 
   // Default theme (light theme)
   const theme = {
-    gradientColors: ['#C5E3F6', '#E5F2FA', '#FFFFFF'],
-    card: '#FFFFFF',
-    text: '#000000',
-    textSecondary: '#666666',
-    primary: '#007AFF',
-    modalOverlay: 'rgba(0, 0, 0, 0.5)',
-    cancelButton: '#f0f0f0',
-    cancelButtonText: '#666',
-    buttonText: '#fff'
-  };
+		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
+		card: "#FFFFFF",
+		text: "#000000",
+		textSecondary: "#666666",
+		primary: "#007AFF",
+		modalOverlay: "rgba(0, 0, 0, 0.5)",
+		cancelButton: "#f0f0f0",
+		cancelButtonText: "#666",
+		buttonText: "#fff",
+	};
 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showDarkModeModal, setShowDarkModeModal] = useState(false);

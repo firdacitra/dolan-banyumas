@@ -34,12 +34,12 @@ const RatingScreen = ({ navigation }) => {
 
   // Default theme (light theme)
   const theme = {
-    gradientColors: ['#FFFFFF', '#F0F8FF', '#E6F2FF'],
-    card: '#FFFFFF',
-    text: '#000000',
-    textSecondary: '#666666',
-    primary: '#007AFF'
-  };
+		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
+		card: "#FFFFFF",
+		text: "#000000",
+		textSecondary: "#666666",
+		primary: "#007AFF",
+	};
 
   const [rating, setRating] = useState(0);
   const [averageRating] = useState(4.5);

@@ -11,45 +11,40 @@ import {
 	Platform,
 	Alert,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function LoginScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
-	const [showPassword, setShowPassword] = useState(false);
+	const [confirm, setConfirm] = useState("");
 
-	const handleLogin = async () => {
-		// Validasi input
-		if (!username || !password) {
-			Alert.alert("Error", "Username dan password harus diisi");
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirm, setShowConfirm] = useState(false);
+
+	const handleRegister = async () => {
+		if (username === "" || password === "") {
+			Alert.alert("Error", "Isi semua field");
 			return;
 		}
 
-		try {
-			const user = await AsyncStorage.getItem("user");
-
-			if (!user) {
-				Alert.alert("Error", "Belum ada akun. Silakan daftar terlebih dahulu");
-				return;
-			}
-
-			const data = JSON.parse(user);
-
-			if (username === data.username && password === data.password) {
-				// Simpan status login
-				await AsyncStorage.setItem("isLogin", "true");
-
-				// Navigasi ke MainTab dan ganti halaman login
-				navigation.replace("MainTab");
-			} else {
-				Alert.alert("Error", "Username atau password salah");
-			}
-		} catch (error) {
-			console.error("Login error:", error);
-			Alert.alert("Error", "Terjadi kesalahan saat login");
+		if (password !== confirm) {
+			Alert.alert("Error", "Password tidak sama");
+			return;
 		}
+
+		const user = {
+			username,
+			password,
+		};
+
+		await AsyncStorage.setItem("user", JSON.stringify(user));
+
+		Alert.alert("Berhasil", "Akun berhasil dibuat");
+
+		navigation.navigate("Login");
 	};
 
 	return (
@@ -65,28 +60,28 @@ export default function LoginScreen({ navigation }) {
 					<Text style={styles.appTitle}>Dolan Banyumas</Text>
 
 					<View style={styles.card}>
-						<Text style={styles.title}>LOGIN</Text>
+						<Text style={styles.title}>REGISTER</Text>
 
 						<View style={styles.input}>
 							<Ionicons name="person-outline" size={20} color="#555" />
+
 							<TextInput
 								placeholder="Username"
 								style={styles.textInput}
-								value={username}
 								onChangeText={setUsername}
-								autoCapitalize="none"
 							/>
 						</View>
 
 						<View style={styles.input}>
 							<Ionicons name="lock-closed-outline" size={20} color="#555" />
+
 							<TextInput
 								placeholder="Password"
 								secureTextEntry={!showPassword}
 								style={styles.textInput}
-								value={password}
 								onChangeText={setPassword}
 							/>
+
 							<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
 								<Ionicons
 									name={showPassword ? "eye-outline" : "eye-off-outline"}
@@ -96,14 +91,34 @@ export default function LoginScreen({ navigation }) {
 							</TouchableOpacity>
 						</View>
 
-						<TouchableOpacity style={styles.button} onPress={handleLogin}>
-							<Text style={styles.buttonText}>Login</Text>
+						<View style={styles.input}>
+							<Ionicons name="lock-closed-outline" size={20} color="#555" />
+
+							<TextInput
+								placeholder="Confirm Password"
+								secureTextEntry={!showConfirm}
+								style={styles.textInput}
+								onChangeText={setConfirm}
+							/>
+
+							<TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+								<Ionicons
+									name={showConfirm ? "eye-outline" : "eye-off-outline"}
+									size={20}
+									color="#555"
+								/>
+							</TouchableOpacity>
+						</View>
+
+						<TouchableOpacity style={styles.button} onPress={handleRegister}>
+							<Text style={styles.buttonText}>Register</Text>
 						</TouchableOpacity>
 
 						<View style={styles.row}>
-							<Text>Belum punya akun? </Text>
-							<TouchableOpacity onPress={() => navigation.navigate("Register")}>
-								<Text style={styles.link}>daftar sini</Text>
+							<Text>Sudah punya akun ?</Text>
+
+							<TouchableOpacity onPress={() => navigation.navigate("Login")}>
+								<Text style={styles.link}>login</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -119,26 +134,25 @@ const styles = StyleSheet.create({
 		padding: 24,
 		justifyContent: "flex-end",
 	},
+
 	appTitle: {
 		fontSize: 18,
 		marginTop: 50,
-		color: "#333",
-		fontWeight: "bold",
-		textAlign: "center",
 	},
+
 	card: {
 		backgroundColor: "rgba(255,255,255,0.95)",
 		borderRadius: 20,
 		padding: 24,
-		marginBottom: 30,
 	},
+
 	title: {
 		fontSize: 22,
 		fontWeight: "bold",
 		textAlign: "center",
 		marginBottom: 20,
-		color: "#333",
 	},
+
 	input: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -147,34 +161,35 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		marginBottom: 15,
 		elevation: 3,
-		borderWidth: 1,
-		borderColor: "#ddd",
 	},
+
 	textInput: {
 		flex: 1,
 		height: 48,
 		marginLeft: 10,
-		color: "#333",
 	},
+
 	button: {
-		backgroundColor: "#2196F3",
+		backgroundColor: "#6C8EE5",
 		padding: 15,
 		borderRadius: 12,
 		alignItems: "center",
 		marginTop: 10,
 	},
+
 	buttonText: {
 		color: "#fff",
 		fontWeight: "bold",
-		fontSize: 16,
 	},
+
 	row: {
 		flexDirection: "row",
 		justifyContent: "center",
 		marginTop: 15,
 	},
+
 	link: {
-		color: "#2196F3",
+		color: "#1E88E5",
 		fontWeight: "bold",
 	},
 });
