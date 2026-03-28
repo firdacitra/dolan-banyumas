@@ -1,3 +1,4 @@
+// src/screen/Detail/index.js
 import React, { useState, useEffect } from "react";
 import {
 	View,
@@ -16,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFavorites } from "../../context/FavoriteContext";
+import { useLastSeen } from "../../context/LastSeenContext"; // TAMBAHKAN IMPORT INI
 
 const { width } = Dimensions.get("window");
 
@@ -31,12 +33,31 @@ const theme = lightTheme;
 
 export default function Detail({ navigation, route }) {
 	const { isFavorite, toggleFavorite } = useFavorites();
+	const { addToLastSeen } = useLastSeen(); // TAMBAHKAN INI
+	
 	const [activeSlide, setActiveSlide] = useState(0);
 	const [lightboxVisible, setLightboxVisible] = useState(false);
 	const [selectedImage, setSelectedImage] = useState(null);
 	const [isLogin, setIsLogin] = useState(false);
 
 	const { item } = route.params;
+
+	// TAMBAHKAN USEFFECT INI UNTUK MENCATAT KE LAST SEEN
+	useEffect(() => {
+		if (item) {
+			// Buat salinan item dengan properti yang konsisten
+			const itemToSave = {
+				id: item.id,
+				name: item.name || item.title,
+				category: item.category,
+				address: item.address || item.addres, // Tangani address atau addres
+				rating: item.rating,
+				image: item.image,
+				description: item.description,
+			};
+			addToLastSeen(itemToSave);
+		}
+	}, []);
 
 	useEffect(() => {
 		checkLoginStatus();
@@ -75,7 +96,8 @@ export default function Detail({ navigation, route }) {
 
 	// FUNGSI MAPS - KONFIRMASI SEDERHANA
 	const handleOpenMaps = () => {
-		const searchQuery = `${item.name}, ${item.address}`;
+		const alamat = item.address || item.addres || '';
+		const searchQuery = `${item.name}, ${alamat}`;
 		const encodedQuery = encodeURIComponent(searchQuery);
 
 		Alert.alert(
@@ -217,14 +239,14 @@ export default function Detail({ navigation, route }) {
 						<Text style={styles.sectionTitle}>Deskripsi</Text>
 						<Text style={styles.descText}>
 							{item.description ||
-								`${item.name} berlokasi di ${item.address}. Tempat ini menawarkan pengalaman menarik untuk dikunjungi.`}
+								`${item.name} berlokasi di ${item.address || item.addres}. Tempat ini menawarkan pengalaman menarik untuk dikunjungi.`}
 						</Text>
 
 						<View style={styles.divider} />
 
 						<Text style={styles.sectionTitle}>Alamat</Text>
 						<TouchableOpacity onPress={handleOpenMaps}>
-							<Text style={styles.address}>📍 {item.address}</Text>
+							<Text style={styles.address}>📍 {item.address || item.addres}</Text>
 						</TouchableOpacity>
 					</View>
 

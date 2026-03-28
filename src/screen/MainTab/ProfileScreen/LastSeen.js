@@ -1,6 +1,7 @@
+// src/screen/MainTab/ProfileScreen/LastSeen.js
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ScrollView,
@@ -11,23 +12,34 @@ import {
   Modal,
   Image,
   Dimensions,
+  Alert,
 } from "react-native";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useLastSeen } from "../../../context/LastSeenContext";
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const { width } = Dimensions.get('window');
 
 const LastSeen = ({ navigation }) => {
+  const { t } = useLanguage();
+  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
+  const { lastSeenItems, getLastSeenByFilter } = useLastSeen();
+  
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('Semua tanggal');
-  const [tempSelectedFilter, setTempSelectedFilter] = useState('Semua tanggal');
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0));
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [tempSelectedFilter, setTempSelectedFilter] = useState('all');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedStartDate, setSelectedStartDate] = useState(null);
   const [selectedEndDate, setSelectedEndDate] = useState(null);
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
 
+  // Filter options dengan bahasa Indonesia
   const filterOptions = [
-    { label: 'Semua tanggal', value: 'all' },
+    { label: 'Semua Tanggal', value: 'all' },
+    { label: 'Hari Ini', value: 'today' },
     { label: 'Kemarin', value: 'yesterday' },
     { label: 'Minggu Lalu', value: 'lastweek' },
     { label: 'Bulan Lalu', value: 'lastmonth' },
@@ -41,61 +53,83 @@ const LastSeen = ({ navigation }) => {
 
   const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-  // Sample hotel data
-  const hotels = [
-    {
-      id: 1,
-      name: 'Curug Cipendok',
-      location: 'Desa Karangtengah, Cilongok',
-      category: 'Wisata Alam',
-      rating: 4.5,
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    },
-    {
-      id: 2,
-      name: 'Baturraden',
-      location: 'Banyumas, Jawa Tengah',
-      category: 'Wisata Alam',
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    },
-    {
-      id: 3,
-      name: 'Hotel Santika',
-      location: 'Purwokerto, Jawa Tengah',
-      category: 'Penginapan',
-      rating: 4.3,
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    },
-    {
-      id: 4,
-      name: 'Sate Buntel',
-      location: 'Purwokerto, Jawa Tengah',
-      category: 'Kuliner',
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    },
-    {
-      id: 5,
-      name: 'Desa Wisata Karangbanjar',
-      location: 'Banyumas, Jawa Tengah',
-      category: 'Desa Wisata',
-      rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    },
-  ];
+  // FILTER: Update ketika selectedFilter berubah atau data berubah
+  useEffect(() => {
+    applyFilterData();
+  }, [selectedFilter, selectedStartDate, selectedEndDate, lastSeenItems]);
+
+  const applyFilterData = () => {
+    if (!lastSeenItems || lastSeenItems.length === 0) {
+      setFilteredItems([]);
+      return;
+    }
+
+    let hasil = [];
+
+    if (selectedFilter === 'range' && selectedStartDate && selectedEndDate) {
+      // Filter berdasarkan rentang tanggal
+      const startStr = selectedStartDate.toISOString().split('T')[0];
+      const endStr = selectedEndDate.toISOString().split('T')[0];
+      
+      hasil = lastSeenItems.filter(item => {
+        return item.lastSeenDate >= startStr && item.lastSeenDate <= endStr;
+      });
+    } else {
+      // Gunakan filter dari context
+      switch(selectedFilter) {
+        case 'today': {
+          const today = new Date().toISOString().split('T')[0];
+          hasil = lastSeenItems.filter(item => item.lastSeenDate === today);
+          break;
+        }
+        case 'yesterday': {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          hasil = lastSeenItems.filter(item => item.lastSeenDate === yesterdayStr);
+          break;
+        }
+        case 'lastweek': {
+          const today = new Date();
+          const lastWeek = new Date(today);
+          lastWeek.setDate(lastWeek.getDate() - 7);
+          const lastWeekStr = lastWeek.toISOString().split('T')[0];
+          const todayStr = today.toISOString().split('T')[0];
+          
+          hasil = lastSeenItems.filter(item => {
+            return item.lastSeenDate >= lastWeekStr && item.lastSeenDate < todayStr;
+          });
+          break;
+        }
+        case 'lastmonth': {
+          const today = new Date();
+          const lastMonth = new Date(today);
+          lastMonth.setMonth(lastMonth.getMonth() - 1);
+          const lastMonthStr = lastMonth.toISOString().split('T')[0];
+          const todayStr = today.toISOString().split('T')[0];
+          
+          hasil = lastSeenItems.filter(item => {
+            return item.lastSeenDate >= lastMonthStr && item.lastSeenDate < todayStr;
+          });
+          break;
+        }
+        default: // 'all'
+          hasil = [...lastSeenItems];
+      }
+    }
+    
+    // Urutkan dari yang terbaru
+    hasil.sort((a, b) => new Date(b.lastSeenTime) - new Date(a.lastSeenTime));
+    setFilteredItems(hasil);
+  };
 
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       if (i <= rating) {
-        stars.push(
-          <Text key={i} style={styles.starFull}>★</Text>
-        );
+        stars.push(<Text key={i} style={styles.starFull}>★</Text>);
       } else {
-        stars.push(
-          <Text key={i} style={styles.starEmpty}>★</Text>
-        );
+        stars.push(<Text key={i} style={styles.starEmpty}>★</Text>);
       }
     }
     return stars;
@@ -114,10 +148,30 @@ const LastSeen = ({ navigation }) => {
     return colors[category] || "#FF5757";
   };
 
-  const renderCard = (hotel) => (
-    <View key={hotel.id} style={styles.card}>
+  const formatTanggal = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hari Ini';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Kemarin';
+    } else {
+      return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    }
+  };
+
+  const renderCard = (item) => (
+    <TouchableOpacity 
+      key={item.id} 
+      style={[styles.card, { backgroundColor: theme.card }]}
+      onPress={() => navigation.navigate("Detail", { item })}
+      activeOpacity={0.7}
+    >
       <Image 
-        source={{ uri: hotel.image }}
+        source={typeof item.image === 'string' ? { uri: item.image } : item.image}
         style={styles.cardImage}
         resizeMode="cover"
       />
@@ -126,33 +180,26 @@ const LastSeen = ({ navigation }) => {
         <View
           style={[
             styles.categoryBadge,
-            { backgroundColor: getCategoryBadgeColor(hotel.category) },
+            { backgroundColor: getCategoryBadgeColor(item.category) },
           ]}
         >
-          <Text style={styles.categoryText}>{hotel.category}</Text>
+          <Text style={styles.categoryText}>{item.category}</Text>
         </View>
 
-        <Text style={styles.cardTitle}>{hotel.name}</Text>
-        <Text style={styles.cardAddress}>{hotel.location}</Text>
+        <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+        <Text style={[styles.cardAddress, { color: theme.textSecondary }]} numberOfLines={1}>{item.address || ''}</Text>
 
         <View style={styles.cardFooter}>
           <View style={styles.ratingContainer}>
-            {renderStars(hotel.rating)}
+            {renderStars(item.rating)}
           </View>
-
-          <TouchableOpacity
-            style={styles.detailButton}
-            onPress={() => navigation.navigate("Detail", { item: hotel })}
-          >
-            <Text style={styles.detailButtonText}>Lihat selengkapnya</Text>
-          </TouchableOpacity>
+          
+          <Text style={[styles.viewedDate, { color: theme.textSecondary }]}>
+            {formatTanggal(item.lastSeenDate)}
+          </Text>
         </View>
       </View>
-
-      <TouchableOpacity style={styles.favoriteButton}>
-        <Text style={styles.favoriteIcon}>♡</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   const getDaysInMonth = (date) => {
@@ -167,11 +214,14 @@ const LastSeen = ({ navigation }) => {
     const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     
     if (!tempStartDate || (tempStartDate && tempEndDate)) {
+      // Pilih tanggal mulai
       setTempStartDate(selectedDate);
       setTempEndDate(null);
     } else if (selectedDate < tempStartDate) {
+      // Jika tanggal yang dipilih lebih kecil dari tanggal mulai, jadikan sebagai tanggal mulai baru
       setTempStartDate(selectedDate);
     } else {
+      // Pilih tanggal akhir
       setTempEndDate(selectedDate);
     }
   };
@@ -186,11 +236,26 @@ const LastSeen = ({ navigation }) => {
 
   const applyFilter = () => {
     setSelectedFilter(tempSelectedFilter);
-    if (tempSelectedFilter === 'Rentang Tanggal') {
-      setSelectedStartDate(tempStartDate);
-      setSelectedEndDate(tempEndDate);
+    if (tempSelectedFilter === 'range') {
+      if (tempStartDate && tempEndDate) {
+        setSelectedStartDate(tempStartDate);
+        setSelectedEndDate(tempEndDate);
+      } else {
+        Alert.alert('Peringatan', 'Pilih tanggal awal dan akhir terlebih dahulu');
+        return;
+      }
+    } else {
+      setSelectedStartDate(null);
+      setSelectedEndDate(null);
     }
     setShowFilterModal(false);
+    setShowDatePicker(false);
+  };
+
+  const resetFilter = () => {
+    setTempSelectedFilter('all');
+    setTempStartDate(null);
+    setTempEndDate(null);
     setShowDatePicker(false);
   };
 
@@ -198,15 +263,21 @@ const LastSeen = ({ navigation }) => {
     const { firstDay, daysInMonth } = getDaysInMonth(currentMonth);
     const days = [];
 
+    // Tambahkan hari kosong untuk menyesuaikan hari pertama bulan
     for (let i = 0; i < firstDay; i++) {
       days.push(<View key={`empty-${i}`} style={styles.emptyDay} />);
     }
 
+    // Buat tombol untuk setiap tanggal
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-      const isSelected = (tempStartDate && date.toDateString() === tempStartDate.toDateString()) ||
-                        (tempEndDate && date.toDateString() === tempEndDate.toDateString());
-      const isInRange = tempStartDate && tempEndDate && date > tempStartDate && date < tempEndDate;
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const isSelected = (tempStartDate && dateStr === tempStartDate.toISOString().split('T')[0]) ||
+                        (tempEndDate && dateStr === tempEndDate.toISOString().split('T')[0]);
+      
+      const isInRange = tempStartDate && tempEndDate && 
+                        date > tempStartDate && date < tempEndDate;
 
       days.push(
         <TouchableOpacity
@@ -220,6 +291,7 @@ const LastSeen = ({ navigation }) => {
         >
           <Text style={[
             styles.dayText,
+            { color: theme.text },
             isSelected && styles.selectedDayText
           ]}>
             {day}
@@ -231,163 +303,217 @@ const LastSeen = ({ navigation }) => {
     return days;
   };
 
+  const getJudulFilter = () => {
+    const option = filterOptions.find(opt => opt.value === selectedFilter);
+    if (selectedFilter === 'range' && selectedStartDate && selectedEndDate) {
+      return formatDateRange(selectedStartDate, selectedEndDate);
+    }
+    return option?.label || 'Semua Tanggal';
+  };
+
+  // Debug: lihat data
+  useEffect(() => {
+    console.log('LastSeenItems:', lastSeenItems.length);
+    console.log('FilteredItems:', filteredItems.length);
+  }, [lastSeenItems, filteredItems]);
+
   return (
-		<LinearGradient
-			colors={["#72b8f6", "#a7d4fc", "#E6F2FF"]}
-			locations={[0, 0.3, 1]}
-			style={styles.container}
-		>
-			<SafeAreaView style={styles.safeArea}>
-				{/* Header */}
-				<View style={styles.header}>
-					<TouchableOpacity
-						style={styles.backButton}
-						onPress={() => navigation.goBack()}
-					>
-						<Ionicons name="arrow-back" size={24} color="#000" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Terakhir dilihat</Text>
-					<TouchableOpacity style={styles.searchButton}>
-						<Ionicons name="search" size={24} color="#000" />
-					</TouchableOpacity>
-				</View>
+    <LinearGradient
+      colors={theme.gradientColors}
+      locations={[0, 0.3, 1]}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Terakhir Dilihat</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-				{/* Filter Button */}
-				<View style={styles.filterContainer}>
-					<TouchableOpacity
-						style={styles.filterButton}
-						onPress={() => {
-							setTempSelectedFilter(selectedFilter);
-							setShowFilterModal(true);
-						}}
-					>
-						<Text style={styles.filterText}>Filter berdasarkan tanggal</Text>
-						<Ionicons name="chevron-down" size={18} color="#000" />
-					</TouchableOpacity>
-				</View>
+        {/* Tombol Filter */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={[styles.filterButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+            onPress={() => {
+              setTempSelectedFilter(selectedFilter);
+              setTempStartDate(selectedStartDate);
+              setTempEndDate(selectedEndDate);
+              setShowFilterModal(true);
+            }}
+          >
+            <Text style={[styles.filterText, { color: theme.text }]}>{getJudulFilter()}</Text>
+            <Ionicons name="chevron-down" size={18} color={theme.text} />
+          </TouchableOpacity>
+        </View>
 
-				{/* Hotel List */}
-				<ScrollView
-					style={styles.contentContainer}
-					showsVerticalScrollIndicator={false}
-					contentContainerStyle={styles.scrollContent}
-				>
-					{hotels.map((hotel) => renderCard(hotel))}
-				</ScrollView>
-			</SafeAreaView>
+        {/* Jumlah Item */}
+        <View style={styles.countContainer}>
+          <Text style={[styles.countText, { color: theme.textSecondary }]}>
+            {filteredItems.length} item dilihat
+          </Text>
+        </View>
 
-			{/* Filter Modal */}
-			<Modal
-				visible={showFilterModal}
-				transparent={true}
-				animationType="slide"
-				onRequestClose={() => setShowFilterModal(false)}
-			>
-				<View style={styles.modalOverlay}>
-					<View style={styles.modalContent}>
-						<View style={styles.modalHeader}>
-							<TouchableOpacity onPress={() => setShowFilterModal(false)}>
-								<Ionicons name="close" size={24} color="#000" />
-							</TouchableOpacity>
-							<Text style={styles.modalTitle}>Filter berdasarkan tanggal</Text>
-							<TouchableOpacity onPress={applyFilter}>
-								<Ionicons name="checkmark" size={24} color="#000" />
-							</TouchableOpacity>
-						</View>
+        {/* Daftar Last Seen */}
+        {filteredItems.length > 0 ? (
+          <ScrollView
+            style={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {filteredItems.map((item) => renderCard(item))}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="eye-off-outline" size={60} color={theme.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              Belum Ada Item Dilihat
+            </Text>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+              Item yang Anda lihat akan muncul di sini
+            </Text>
+            <TouchableOpacity
+              style={[styles.jelajahiButton, { backgroundColor: theme.primary }]}
+              onPress={() => navigation.navigate('MainTab')}
+            >
+              <Text style={styles.jelajahiButtonText}>
+                Jelajahi Wisata
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </SafeAreaView>
 
-						{!showDatePicker ? (
-							<View style={styles.filterOptions}>
-								{filterOptions.map((option, index) => (
-									<TouchableOpacity
-										key={index}
-										style={styles.filterOption}
-										onPress={() => {
-											if (option.value === "range") {
-												setShowDatePicker(true);
-											} else {
-												setTempSelectedFilter(option.label);
-											}
-										}}
-									>
-										<Text style={styles.filterOptionText}>{option.label}</Text>
-										<View style={styles.filterOptionRight}>
-											{tempSelectedFilter === option.label &&
-												!option.hasArrow && (
-													<View style={styles.radioSelected} />
-												)}
-											{option.hasArrow && (
-												<Ionicons
-													name="chevron-forward"
-													size={20}
-													color="#666"
-												/>
-											)}
-											{tempSelectedFilter !== option.label &&
-												!option.hasArrow && (
-													<View style={styles.radioUnselected} />
-												)}
-										</View>
-									</TouchableOpacity>
-								))}
-							</View>
-						) : (
-							<View style={styles.datePickerContainer}>
-								<View style={styles.monthNavigation}>
-									<TouchableOpacity
-										onPress={() =>
-											setCurrentMonth(
-												new Date(
-													currentMonth.getFullYear(),
-													currentMonth.getMonth() - 1,
-												),
-											)
-										}
-									>
-										<Ionicons name="chevron-back" size={24} color="#000" />
-									</TouchableOpacity>
-									<Text style={styles.monthYear}>
-										{monthNames[currentMonth.getMonth()]}{" "}
-										{currentMonth.getFullYear()}
-									</Text>
-									<TouchableOpacity
-										onPress={() =>
-											setCurrentMonth(
-												new Date(
-													currentMonth.getFullYear(),
-													currentMonth.getMonth() + 1,
-												),
-											)
-										}
-									>
-										<Ionicons name="chevron-forward" size={24} color="#000" />
-									</TouchableOpacity>
-								</View>
+      {/* Modal Filter */}
+      <Modal
+        visible={showFilterModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Filter Tanggal</Text>
+              <TouchableOpacity onPress={applyFilter}>
+                <Ionicons name="checkmark" size={24} color={theme.primary} />
+              </TouchableOpacity>
+            </View>
 
-								<View style={styles.calendar}>
-									<View style={styles.weekDays}>
-										{dayNames.map((day, index) => (
-											<Text key={index} style={styles.weekDayText}>
-												{day}
-											</Text>
-										))}
-									</View>
-									<View style={styles.daysGrid}>{renderDatePicker()}</View>
-								</View>
+            {!showDatePicker ? (
+              <View style={styles.filterOptions}>
+                {filterOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[styles.filterOption, { borderBottomColor: theme.border }]}
+                    onPress={() => {
+                      if (option.value === "range") {
+                        setShowDatePicker(true);
+                      } else {
+                        setTempSelectedFilter(option.value);
+                      }
+                    }}
+                  >
+                    <Text style={[styles.filterOptionText, { color: theme.text }]}>{option.label}</Text>
+                    <View style={styles.filterOptionRight}>
+                      {tempSelectedFilter === option.value && !option.hasArrow && (
+                        <View style={[styles.radioSelected, { borderColor: theme.primary }]} />
+                      )}
+                      {option.hasArrow && (
+                        <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+                      )}
+                      {tempSelectedFilter !== option.value && !option.hasArrow && (
+                        <View style={[styles.radioUnselected, { borderColor: theme.border }]} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                
+                <TouchableOpacity
+                  style={[styles.resetFilterButton, { backgroundColor: theme.background }]}
+                  onPress={resetFilter}
+                >
+                  <Text style={[styles.resetFilterText, { color: theme.textSecondary }]}>
+                    Reset Filter
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.datePickerContainer}>
+                <View style={styles.monthNavigation}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setCurrentMonth(
+                        new Date(
+                          currentMonth.getFullYear(),
+                          currentMonth.getMonth() - 1,
+                        ),
+                      )
+                    }
+                  >
+                    <Ionicons name="chevron-back" size={24} color={theme.text} />
+                  </TouchableOpacity>
+                  <Text style={[styles.monthYear, { color: theme.text }]}>
+                    {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setCurrentMonth(
+                        new Date(
+                          currentMonth.getFullYear(),
+                          currentMonth.getMonth() + 1,
+                        ),
+                      )
+                    }
+                  >
+                    <Ionicons name="chevron-forward" size={24} color={theme.text} />
+                  </TouchableOpacity>
+                </View>
 
-								{(tempStartDate || tempEndDate) && (
-									<View style={styles.selectedDateRange}>
-										<Text style={styles.selectedDateRangeText}>
-											{formatDateRange(tempStartDate, tempEndDate)}
-										</Text>
-									</View>
-								)}
-							</View>
-						)}
-					</View>
-				</View>
-			</Modal>
-		</LinearGradient>
-	);
+                <View style={styles.calendar}>
+                  <View style={styles.weekDays}>
+                    {dayNames.map((day, index) => (
+                      <Text key={index} style={[styles.weekDayText, { color: theme.textSecondary }]}>
+                        {day}
+                      </Text>
+                    ))}
+                  </View>
+                  <View style={styles.daysGrid}>{renderDatePicker()}</View>
+                </View>
+
+                {(tempStartDate || tempEndDate) && (
+                  <View style={[styles.selectedDateRange, { backgroundColor: theme.background }]}>
+                    <Text style={[styles.selectedDateRangeText, { color: theme.text }]}>
+                      {formatDateRange(tempStartDate, tempEndDate)}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.datePickerActions}>
+                  <TouchableOpacity
+                    style={[styles.datePickerBackButton, { backgroundColor: theme.primary }]}
+                    onPress={() => setShowDatePicker(false)}
+                  >
+                    <Text style={styles.datePickerBackButtonText}>
+                      Kembali ke Daftar Filter
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -413,9 +539,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
   },
-  searchButton: {
-    padding: 4,
-  },
   filterContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -436,6 +559,14 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '400',
   },
+  countContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  countText: {
+    fontSize: 12,
+    color: '#666',
+  },
   contentContainer: {
     flex: 1,
   },
@@ -444,7 +575,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   
-  // Card Styles - SAMA SEPERTI DI HOME SCREEN
+  // Card Styles
   card: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -508,39 +639,46 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#E0E0E0",
   },
-  detailButton: {
-    backgroundColor: "#2196F3",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 18,
-  },
-  detailButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  favoriteButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  favoriteIcon: {
-    fontSize: 20,
-    color: "#333",
+  viewedDate: {
+    fontSize: 10,
+    color: "#999",
+    fontStyle: "italic",
   },
   
-  // Modal Styles (tetap sama)
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingTop: 100,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  jelajahiButton: {
+    backgroundColor: '#0066FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  jelajahiButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -600,6 +738,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#CCC',
+  },
+  resetFilterButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+  },
+  resetFilterText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
   datePickerContainer: {
     padding: 16,
@@ -669,6 +819,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
     textAlign: 'center',
+  },
+  datePickerActions: {
+    marginTop: 16,
+  },
+  datePickerBackButton: {
+    backgroundColor: '#0066FF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  datePickerBackButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

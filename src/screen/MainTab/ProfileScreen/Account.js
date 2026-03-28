@@ -11,26 +11,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const Account = ({ navigation }) => {
-  // Mock i18n function untuk terjemahan
-  const i18n = {
-    t: (key) => {
-      const translations = {
-        'account': 'Akun',
-        'logout': 'Keluar',
-        'deleteAccount': 'Hapus Akun',
-        'logoutConfirmation': 'Konfirmasi Keluar',
-        'deleteAccountConfirmation': 'Konfirmasi Hapus Akun',
-        'logoutConfirm': 'Apakah Anda yakin ingin keluar?',
-        'deleteAccountConfirm': 'Apakah Anda yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan.',
-        'no': 'Tidak',
-        'yes': 'Ya',
-        'ok': 'OK'
-      };
-      return translations[key] || key;
-    }
-  };
+  const { t } = useLanguage(); // GUNAKAN useLanguage()
+  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -39,9 +25,9 @@ const Account = ({ navigation }) => {
     setShowLogoutModal(false);
     // Simulasi logout
     Alert.alert(
-      i18n.t('logoutConfirmation'),
-      i18n.t('logout'),
-      [{ text: i18n.t('ok'), onPress: () => navigation.goBack() }]
+      t('logoutConfirmation'),
+      t('logout'),
+      [{ text: t('ok'), onPress: () => navigation.goBack() }]
     );
   };
 
@@ -49,15 +35,15 @@ const Account = ({ navigation }) => {
     setShowDeleteModal(false);
     // Simulasi hapus akun
     Alert.alert(
-      i18n.t('deleteAccountConfirmation'),
-      i18n.t('deleteAccount'),
-      [{ text: i18n.t('ok'), onPress: () => navigation.goBack() }]
+      t('deleteAccountConfirmation'),
+      t('deleteAccount'),
+      [{ text: t('ok'), onPress: () => navigation.goBack() }]
     );
   };
 
   return (
 		<LinearGradient
-			colors={["#72b8f6", "#a7d4fc", "#E6F2FF"]}
+			colors={theme.gradientColors}
 			locations={[0, 0.3, 1]}
 			style={styles.container}
 		>
@@ -68,35 +54,35 @@ const Account = ({ navigation }) => {
 							style={styles.backButton}
 							onPress={() => navigation.goBack()}
 						>
-							<Ionicons name="arrow-back" size={24} color="#000" />
+							<Ionicons name="arrow-back" size={24} color={theme.text} />
 						</TouchableOpacity>
-						<Text style={styles.headerTitle}>{i18n.t("account")}</Text>
+						<Text style={[styles.headerTitle, { color: theme.text }]}>{t("account")}</Text>
 					</View>
 
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>{i18n.t("account")}</Text>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>{t("account")}</Text>
 
 						<TouchableOpacity
-							style={styles.menuItem}
+							style={[styles.menuItem, { backgroundColor: theme.card }]}
 							onPress={() => setShowLogoutModal(true)}
 						>
 							<View style={styles.menuLeft}>
 								<Ionicons name="log-out-outline" size={20} color="#FF3B30" />
 								<Text style={[styles.menuText, { color: "#FF3B30" }]}>
-									{i18n.t("logout")}
+									{t("logout")}
 								</Text>
 							</View>
 							<Ionicons name="chevron-forward" size={18} color="#FF3B30" />
 						</TouchableOpacity>
 
 						<TouchableOpacity
-							style={styles.menuItem}
+							style={[styles.menuItem, { backgroundColor: theme.card }]}
 							onPress={() => setShowDeleteModal(true)}
 						>
 							<View style={styles.menuLeft}>
 								<Ionicons name="trash-outline" size={20} color="#FF3B30" />
 								<Text style={[styles.menuText, { color: "#FF3B30" }]}>
-									{i18n.t("deleteAccount")}
+									{t("deleteAccount")}
 								</Text>
 							</View>
 							<Ionicons name="chevron-forward" size={18} color="#FF3B30" />
@@ -112,26 +98,26 @@ const Account = ({ navigation }) => {
 				visible={showLogoutModal}
 				onRequestClose={() => setShowLogoutModal(false)}
 			>
-				<View style={styles.modalOverlay}>
-					<View style={styles.modalContent}>
-						<Text style={styles.modalTitle}>
-							{i18n.t("logoutConfirmation")}
+				<View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay }]}>
+					<View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+						<Text style={[styles.modalTitle, { color: theme.text }]}>
+							{t("logoutConfirmation")}
 						</Text>
-						<Text style={styles.modalMessage}>{i18n.t("logoutConfirm")}</Text>
+						<Text style={[styles.modalMessage, { color: theme.textSecondary }]}>{t("logoutConfirm")}</Text>
 
 						<View style={styles.modalButtons}>
 							<TouchableOpacity
-								style={[styles.modalButton, styles.cancelButton]}
+								style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.cancelButton }]}
 								onPress={() => setShowLogoutModal(false)}
 							>
-								<Text style={styles.cancelButtonText}>{i18n.t("no")}</Text>
+								<Text style={[styles.cancelButtonText, { color: theme.cancelButtonText }]}>{t("no")}</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity
 								style={[styles.modalButton, styles.confirmButton]}
 								onPress={handleLogout}
 							>
-								<Text style={styles.confirmButtonText}>{i18n.t("yes")}</Text>
+								<Text style={styles.confirmButtonText}>{t("yes")}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -145,28 +131,28 @@ const Account = ({ navigation }) => {
 				visible={showDeleteModal}
 				onRequestClose={() => setShowDeleteModal(false)}
 			>
-				<View style={styles.modalOverlay}>
-					<View style={styles.modalContent}>
-						<Text style={styles.modalTitle}>
-							{i18n.t("deleteAccountConfirmation")}
+				<View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay }]}>
+					<View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+						<Text style={[styles.modalTitle, { color: theme.text }]}>
+							{t("deleteAccountConfirmation")}
 						</Text>
-						<Text style={styles.modalMessage}>
-							{i18n.t("deleteAccountConfirm")}
+						<Text style={[styles.modalMessage, { color: theme.textSecondary }]}>
+							{t("deleteAccountConfirm")}
 						</Text>
 
 						<View style={styles.modalButtons}>
 							<TouchableOpacity
-								style={[styles.modalButton, styles.cancelButton]}
+								style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.cancelButton }]}
 								onPress={() => setShowDeleteModal(false)}
 							>
-								<Text style={styles.cancelButtonText}>{i18n.t("no")}</Text>
+								<Text style={[styles.cancelButtonText, { color: theme.cancelButtonText }]}>{t("no")}</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity
 								style={[styles.modalButton, styles.confirmButton]}
 								onPress={handleDeleteAccount}
 							>
-								<Text style={styles.confirmButtonText}>{i18n.t("yes")}</Text>
+								<Text style={styles.confirmButtonText}>{t("yes")}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -187,12 +173,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   backButton: { marginRight: 16 },
-  headerTitle: { fontSize: 20, fontWeight: "600", color: "#000" },
+  headerTitle: { fontSize: 20, fontWeight: "600" },
   section: { paddingHorizontal: 16, marginTop: 16 },
   sectionTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#000",
     marginBottom: 12,
     marginLeft: 2,
   },
@@ -200,7 +185,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -222,20 +206,18 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     width: "100%",
     maxWidth: 400,
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", color: "#000", marginBottom: 12 },
-  modalMessage: { fontSize: 15, color: "#333", marginBottom: 24, lineHeight: 22 },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12 },
+  modalMessage: { fontSize: 15, marginBottom: 24, lineHeight: 22 },
   modalButtons: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
   modalButton: {
     paddingVertical: 12,
@@ -247,7 +229,7 @@ const styles = StyleSheet.create({
   cancelButton: { 
     backgroundColor: "#f0f0f0",
   },
-  cancelButtonText: { fontSize: 15, color: "#666", fontWeight: "500" },
+  cancelButtonText: { fontSize: 15, fontWeight: "500" },
   confirmButton: { 
     backgroundColor: "#FF3B30",
   },

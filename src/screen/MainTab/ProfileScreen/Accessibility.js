@@ -6,41 +6,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext";
 
 const Accessibility = ({ navigation }) => {
-  // Mock i18n function untuk terjemahan
-  const i18n = {
-    t: (key) => {
-      const translations = {
-        'accessibility': 'Aksesibilitas',
-        'darkMode': 'Mode gelap',
-        'darkModeDesc': 'Tampilan yang lebih nyaman untuk mata',
-        'enableDarkMode': 'Mode gelap',
-        'yes': 'Ya mau',
-        'no': 'Gak dulu'
-      };
-      return translations[key] || key;
-    }
-  };
-
-  // Default theme (light theme)
-  const theme = {
-		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
-		card: "#FFFFFF",
-		text: "#000000",
-		textSecondary: "#666666",
-		primary: "#007AFF",
-		modalOverlay: "rgba(0, 0, 0, 0.5)",
-		cancelButton: "#f0f0f0",
-		cancelButtonText: "#666",
-		buttonText: "#fff",
-	};
-
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { t } = useLanguage();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
   const [showDarkModeModal, setShowDarkModeModal] = useState(false);
 
   const handleDarkModePress = () => {
@@ -48,7 +24,7 @@ const Accessibility = ({ navigation }) => {
   };
 
   const confirmDarkMode = () => {
-    setIsDarkMode(true);
+    toggleTheme();
     setShowDarkModeModal(false);
   };
 
@@ -72,34 +48,36 @@ const Accessibility = ({ navigation }) => {
               <Ionicons name="arrow-back" size={24} color={theme.text} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: theme.text }]}>
-              {i18n.t('accessibility')}
+              {t('accessibility')}
             </Text>
           </View>
 
           <View style={styles.content}>
+            {/* Dark Mode Option */}
             <TouchableOpacity 
               style={[styles.settingItem, { backgroundColor: theme.card }]}
               onPress={handleDarkModePress}
             >
               <View style={styles.settingLeft}>
                 <Ionicons 
-                  name="moon-outline" 
+                  name={isDarkMode ? "moon" : "moon-outline"} 
                   size={20} 
                   color={theme.text} 
                 />
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingTitle, { color: theme.text }]}>
-                    {i18n.t('darkMode')}
+                    {t('darkMode')}
                   </Text>
                   <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
-                    {i18n.t('darkModeDesc')}
+                    {isDarkMode ? t('darkModeEnabled') : t('darkModeDisabled')}
                   </Text>
                 </View>
               </View>
-              <Ionicons 
-                name="chevron-forward" 
-                size={20} 
-                color="#999" 
+              <Switch
+                value={isDarkMode}
+                onValueChange={handleDarkModePress}
+                trackColor={{ false: "#767577", true: theme.primary }}
+                thumbColor={isDarkMode ? "#f4f3f4" : "#f4f3f4"}
               />
             </TouchableOpacity>
           </View>
@@ -115,13 +93,12 @@ const Accessibility = ({ navigation }) => {
       >
         <View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay }]}>
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            {/* Placeholder for icon/image */}
-            <View style={styles.iconPlaceholder}>
-              <Ionicons name="moon" size={48} color="#999" />
+            <View style={[styles.iconPlaceholder, { backgroundColor: theme.background }]}>
+              <Ionicons name="moon" size={48} color={theme.textSecondary} />
             </View>
             
             <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {i18n.t('enableDarkMode')}
+              {isDarkMode ? t('disableDarkMode') : t('enableDarkMode')}
             </Text>
             
             <View style={styles.modalButtons}>
@@ -130,23 +107,27 @@ const Accessibility = ({ navigation }) => {
                 onPress={confirmDarkMode}
               >
                 <LinearGradient
-                  colors={['#B3E5FC', '#81D4FA']}
+                  colors={theme.gradientColors}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
                 >
                   <Text style={[styles.confirmButtonText, { color: theme.text }]}>
-                    {i18n.t('yes')}
+                    {t('yes')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[
+                  styles.modalButton, 
+                  styles.cancelButton,
+                  { borderColor: theme.border }
+                ]}
                 onPress={cancelDarkMode}
               >
-                <Text style={[styles.cancelButtonText, { color: theme.text }]}>
-                  {i18n.t('no')}
+                <Text style={[styles.cancelButtonText, { color: theme.textSecondary }]}>
+                  {t('no')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -230,7 +211,6 @@ const styles = StyleSheet.create({
   iconPlaceholder: {
     width: 100,
     height: 100,
-    backgroundColor: '#f5f5f5',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -265,7 +245,6 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     paddingVertical: 13,
     alignItems: "center",
   },

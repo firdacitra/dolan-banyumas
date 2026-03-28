@@ -9,37 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const RatingScreen = ({ navigation }) => {
-  // Mock i18n function untuk terjemahan
-  const i18n = {
-    t: (key) => {
-      const translations = {
-        'rating': 'Penilaian',
-        'yourRating': 'Penilaian Anda',
-        'averageRating': 'Rata-rata Penilaian',
-        'totalReviews': 'Total Ulasan',
-        'writeReview': 'Tulis Ulasan',
-        'submit': 'Kirim',
-        'cancel': 'Batal',
-        'veryBad': 'Sangat Buruk',
-        'bad': 'Buruk',
-        'average': 'Cukup',
-        'good': 'Baik',
-        'excellent': 'Sangat Baik'
-      };
-      return translations[key] || key;
-    }
-  };
-
-  // Default theme (light theme)
-  const theme = {
-		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
-		card: "#FFFFFF",
-		text: "#000000",
-		textSecondary: "#666666",
-		primary: "#007AFF",
-	};
+  const { t } = useLanguage(); // GUNAKAN useLanguage()
+  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
 
   const [rating, setRating] = useState(0);
   const [averageRating] = useState(4.5);
@@ -63,11 +38,11 @@ const RatingScreen = ({ navigation }) => {
 
   const getRatingLabel = (rating) => {
     if (rating === 0) return '';
-    if (rating <= 1) return i18n.t('veryBad');
-    if (rating <= 2) return i18n.t('bad');
-    if (rating <= 3) return i18n.t('average');
-    if (rating <= 4) return i18n.t('good');
-    return i18n.t('excellent');
+    if (rating <= 1) return t('veryBad');
+    if (rating <= 2) return t('bad');
+    if (rating <= 3) return t('average');
+    if (rating <= 4) return t('good');
+    return t('excellent');
   };
 
   return (
@@ -87,7 +62,7 @@ const RatingScreen = ({ navigation }) => {
               <Ionicons name="arrow-back" size={24} color={theme.text} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: theme.text }]}>
-              {i18n.t('rating')}
+              {t('rating')}
             </Text>
           </View>
 
@@ -100,7 +75,7 @@ const RatingScreen = ({ navigation }) => {
                   {averageRating}
                 </Text>
                 <Text style={[styles.totalReviews, { color: theme.textSecondary }]}>
-                  {totalReviews} {i18n.t('totalReviews')}
+                  {totalReviews} {t('totalReviews')}
                 </Text>
               </View>
               <View style={styles.starsContainer}>
@@ -111,7 +86,7 @@ const RatingScreen = ({ navigation }) => {
             {/* Rating Anda */}
             <View style={[styles.yourRatingCard, { backgroundColor: theme.card }]}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
-                {i18n.t('yourRating')}
+                {t('yourRating')}
               </Text>
               
               <View style={styles.yourRatingStars}>
@@ -132,7 +107,7 @@ const RatingScreen = ({ navigation }) => {
                     setRating(0);
                   }}
                 >
-                  <Text style={styles.submitButtonText}>{i18n.t('submit')}</Text>
+                  <Text style={styles.submitButtonText}>{t('submit')}</Text>
                 </TouchableOpacity>
               )}
             </View>

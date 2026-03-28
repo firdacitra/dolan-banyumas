@@ -15,46 +15,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useLanguage } from "../../../i18n/LanguageContext"; 
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const EditProfile = ({ navigation, route }) => {
+  const { t } = useLanguage(); // GUNAKAN useLanguage()
+  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
+
   // Ambil data dari ProfileScreen
   const { 
     currentImage = "https://via.placeholder.com/100",
-    currentUsername = "Username",
+    currentUsername = t('username'),
     currentPhone = "08123456789",
     currentEmail = "username@gmail.com"
   } = route.params || {};
-
-  // Mock i18n function untuk terjemahan
-  const i18n = {
-    t: (key) => {
-      const translations = {
-        'editProfile': 'Ubah Profil',
-        'save': 'Simpan',
-        'choosePhoto': 'Pilih Foto',
-        'username': 'Nama Pengguna',
-        'phoneNumber': 'Nomor Handphone',
-        'email': 'Email',
-        'changePhoto': 'Ganti foto profil',
-        'takePhoto': 'Ambil Foto',
-        'chooseFromGallery': 'Pilih dari Galeri',
-        'deletePhoto': 'Hapus Foto',
-        'cancel': 'Batal'
-      };
-      return translations[key] || key;
-    }
-  };
-
-  // Default theme (light theme)
-  const theme = {
-		gradientColors: ["#72b8f6", "#a7d4fc", "#E6F2FF"],
-		card: "#FFFFFF",
-		text: "#000000",
-		textSecondary: "#666666",
-		primary: "#007AFF",
-		inputBackground: "#F5F5F5",
-		border: "#E0E0E0",
-	};
 
   const [profileImage, setProfileImage] = useState(currentImage);
   const [showImageOptions, setShowImageOptions] = useState(false);
@@ -214,14 +188,14 @@ const EditProfile = ({ navigation, route }) => {
             <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text }]}>
-            {i18n.t('editProfile')}
+            {t('editProfile')}
           </Text>
           <TouchableOpacity 
             style={styles.saveButton}
             onPress={handleSave}
             activeOpacity={0.7}
           >
-            <Text style={styles.saveButtonText}>{i18n.t('save')}</Text>
+            <Text style={[styles.saveButtonText, { color: theme.primary }]}>{t('save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -244,7 +218,7 @@ const EditProfile = ({ navigation, route }) => {
               onPress={() => setShowImageOptions(true)}
             >
               <Text style={[styles.changePhotoText, { color: theme.primary }]}>
-                {i18n.t('changePhoto')}
+                {t('changePhoto')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -254,15 +228,15 @@ const EditProfile = ({ navigation, route }) => {
             {/* Username Field */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.text }]}>
-                {i18n.t('username')}
+                {t('username')}
               </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: theme.inputBackground }]}>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <TextInput
                   style={[styles.input, { color: theme.text }]}
                   value={formData.username}
                   onChangeText={(text) => setFormData({...formData, username: text})}
                   placeholder="Masukkan nama pengguna"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textSecondary}
                 />
               </View>
             </View>
@@ -270,15 +244,15 @@ const EditProfile = ({ navigation, route }) => {
             {/* Phone Number Field */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.text }]}>
-                {i18n.t('phoneNumber')}
+                {t('phoneNumber')}
               </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: theme.inputBackground }]}>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <TextInput
                   style={[styles.input, { color: theme.text }]}
                   value={formData.phoneNumber}
                   onChangeText={(text) => setFormData({...formData, phoneNumber: text})}
                   placeholder="Masukkan nomor handphone"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textSecondary}
                   keyboardType="phone-pad"
                 />
               </View>
@@ -287,15 +261,15 @@ const EditProfile = ({ navigation, route }) => {
             {/* Email Field */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.text }]}>
-                {i18n.t('email')}
+                {t('email')}
               </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: theme.inputBackground }]}>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <TextInput
                   style={[styles.input, { color: theme.text }]}
                   value={formData.email}
                   onChangeText={(text) => setFormData({...formData, email: text})}
                   placeholder="Masukkan email"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textSecondary}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -318,27 +292,27 @@ const EditProfile = ({ navigation, route }) => {
           onPress={() => setShowImageOptions(false)}
         >
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>{i18n.t('choosePhoto')}</Text>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('choosePhoto')}</Text>
               <TouchableOpacity onPress={() => setShowImageOptions(false)}>
                 <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
-              style={styles.modalOption}
+              style={[styles.modalOption, { borderBottomColor: theme.border }]}
               onPress={takePhoto}
             >
               <Ionicons name="camera-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{i18n.t('takePhoto')}</Text>
+              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('takePhoto')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.modalOption}
+              style={[styles.modalOption, { borderBottomColor: theme.border }]}
               onPress={pickImage}
             >
               <Ionicons name="image-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{i18n.t('chooseFromGallery')}</Text>
+              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('chooseFromGallery')}</Text>
             </TouchableOpacity>
 
             {profileImage !== "https://via.placeholder.com/100" && (
@@ -351,7 +325,7 @@ const EditProfile = ({ navigation, route }) => {
               >
                 <Ionicons name="trash-outline" size={24} color="#FF3B30" />
                 <Text style={[styles.modalOptionText, styles.modalOptionTextDanger]}>
-                  {i18n.t('deletePhoto')}
+                  {t('deletePhoto')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -460,7 +434,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   modalTitle: {
     fontSize: 18,
@@ -472,7 +445,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   modalOptionText: {
     fontSize: 16,

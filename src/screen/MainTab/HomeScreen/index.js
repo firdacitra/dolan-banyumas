@@ -13,16 +13,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons"; 
-import { getRecommendations } from "../../../constant/dataMenu/index.js";
-import { eventData } from "../../../constant/dataEvent/index.js";
+import { Ionicons } from "@expo/vector-icons";
+import { getRecommendations } from "../../../constant/dataMenu";
+import { eventData } from "../../../constant/dataEvent";
 import { useFavorites } from "../../../context/FavoriteContext";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext"; // IMPORT THEME
 
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
 	const navigation = useNavigation();
 	const { isFavorite, toggleFavorite } = useFavorites();
+	const { t } = useLanguage();
+	const { theme, isDarkMode } = useTheme(); // GUNAKAN THEME
 
 	const [activeSlide, setActiveSlide] = useState(0);
 	const scrollViewRef = useRef(null);
@@ -57,21 +61,15 @@ const HomeScreen = () => {
 		for (let i = 0; i < 5; i++) {
 			if (i < fullStars) {
 				stars.push(
-					<Text key={i} style={styles.starFull}>
-						★
-					</Text>,
+					<Text key={i} style={{ fontSize: 18, color: theme.starFull }}>★</Text>,
 				);
 			} else if (i === fullStars && hasHalfStar) {
 				stars.push(
-					<Text key={i} style={styles.starHalf}>
-						★
-					</Text>,
+					<Text key={i} style={{ fontSize: 18, color: theme.starHalf, opacity: 0.5 }}>★</Text>,
 				);
 			} else {
 				stars.push(
-					<Text key={i} style={styles.starEmpty}>
-						★
-					</Text>,
+					<Text key={i} style={{ fontSize: 18, color: theme.starEmpty }}>★</Text>,
 				);
 			}
 		}
@@ -96,11 +94,11 @@ const HomeScreen = () => {
 
 		if (loginStatus !== "true") {
 			Alert.alert(
-				"Belum Login",
+				t("login") || "Belum Login",
 				"Anda harus login terlebih dahulu untuk menyukai item",
 				[
-					{ text: "Batal", style: "cancel" },
-					{ text: "Login", onPress: () => navigation.navigate("Login") },
+					{ text: t("cancel") || "Batal", style: "cancel" },
+					{ text: t("login") || "Login", onPress: () => navigation.navigate("Login") },
 				],
 			);
 			return;
@@ -115,42 +113,42 @@ const HomeScreen = () => {
 	const menuCategories = [
 		{
 			id: 1,
-			title: "Objek Wisata",
+			title: t("touristAttractions") || "Objek Wisata",
 			icon: require("../../../assets/logo_wisata.png"),
 			route: "MenuList",
 			params: { category: "objekWisata" },
 		},
 		{
 			id: 2,
-			title: "Kuliner",
+			title: t("culinary") || "Kuliner",
 			icon: require("../../../assets/logo_kuliner.png"),
 			route: "MenuList",
 			params: { category: "kuliner" },
 		},
 		{
 			id: 3,
-			title: "Penginapan",
+			title: t("accommodation") || "Penginapan",
 			icon: require("../../../assets/logo_penginapan.png"),
 			route: "MenuList",
 			params: { category: "penginapan" },
 		},
 		{
 			id: 4,
-			title: "Oleh-oleh",
+			title: t("souvenirs") || "Oleh-oleh",
 			icon: require("../../../assets/logo_oleh2.jpeg"),
 			route: "MenuList",
 			params: { category: "olehOleh" },
 		},
 		{
 			id: 5,
-			title: "Desa Wisata",
+			title: t("touristVillage") || "Desa Wisata",
 			icon: require("../../../assets/logo_desaWisata.jpeg"),
 			route: "MenuList",
 			params: { category: "desaWisata" },
 		},
 		{
 			id: 6,
-			title: "Biro Perjalanan",
+			title: t("travelAgency") || "Biro Perjalanan",
 			icon: require("../../../assets/logo_biro.png"),
 			route: "MenuList",
 			params: { category: "biroPerjalanan" },
@@ -159,19 +157,24 @@ const HomeScreen = () => {
 
 	return (
 		<LinearGradient
-			colors={["#24ccff", "#aaf1ff", "#e0efff"]}
+			colors={theme.gradientColors}
 			style={{ flex: 1 }}
 		>
 			<SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
 				<ScrollView showsVerticalScrollIndicator={false}>
+					{/* HEADER */}
 					<View style={styles.header}>
-						<Text style={styles.headerTitle}>Dolan Banyumas</Text>
+						<Text style={[styles.headerTitle, { color: theme.text }]}>
+							{t("homeTitle")}
+						</Text>
 						{!isLogin && (
 							<TouchableOpacity
-								style={styles.loginButton}
+								style={[styles.loginButton, { backgroundColor: theme.primary }]}
 								onPress={() => navigation.navigate("Login")}
 							>
-								<Text style={styles.loginText}>Login</Text>
+								<Text style={[styles.loginText, { color: theme.buttonText }]}>
+									{t("login")}
+								</Text>
 							</TouchableOpacity>
 						)}
 					</View>
@@ -205,7 +208,7 @@ const HomeScreen = () => {
 									key={index}
 									style={[
 										styles.dot,
-										activeSlide === index && styles.activeDot,
+										activeSlide === index && [styles.activeDot, { backgroundColor: theme.primary }],
 									]}
 								/>
 							))}
@@ -220,20 +223,24 @@ const HomeScreen = () => {
 								style={styles.menuItem}
 								onPress={() => navigation.navigate(menu.route, menu.params)}
 							>
-								<View style={styles.menuIconContainer}>
+								<View style={[styles.menuIconContainer, { backgroundColor: theme.card }]}>
 									<Image source={menu.icon} style={styles.menuIcon} />
 								</View>
-								<Text style={styles.menuTitle}>{menu.title}</Text>
+								<Text style={[styles.menuTitle, { color: theme.text }]}>
+									{menu.title}
+								</Text>
 							</TouchableOpacity>
 						))}
 					</View>
 
 					{/* Rekomendasi */}
 					<View style={styles.recommendationSection}>
-						<Text style={styles.sectionTitle}>Rekomendasi buat kamu</Text>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>
+							{t("recommendations")}
+						</Text>
 
 						{recommendations.map((item) => (
-							<View key={item.id} style={styles.card}>
+							<View key={item.id} style={[styles.card, { backgroundColor: theme.card }]}>
 								<Image source={item.image} style={styles.cardImage} />
 
 								<View style={styles.cardContent}>
@@ -246,8 +253,12 @@ const HomeScreen = () => {
 										<Text style={styles.categoryText}>{item.category}</Text>
 									</View>
 
-									<Text style={styles.cardTitle}>{item.name}</Text>
-									<Text style={styles.cardAddress}>{item.address}</Text>
+									<Text style={[styles.cardTitle, { color: theme.text }]}>
+										{item.name}
+									</Text>
+									<Text style={[styles.cardAddress, { color: theme.textSecondary }]}>
+										{item.address}
+									</Text>
 
 									<View style={styles.cardFooter}>
 										<View style={styles.ratingContainer}>
@@ -255,20 +266,21 @@ const HomeScreen = () => {
 										</View>
 
 										<TouchableOpacity
-											style={styles.detailButton}
+											style={[styles.detailButton, { backgroundColor: theme.primary }]}
 											onPress={() => navigation.navigate("Detail", { item })}
 										>
-											<Text style={styles.detailButtonText}>
-												Lihat selengkapnya
+											<Text style={[styles.detailButtonText, { color: theme.buttonText }]}>
+												{t("viewDetail")}
 											</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 
-								{/* TOMBOL FAVORITE PAKAI IONICONS */}
+								{/* TOMBOL FAVORITE */}
 								<TouchableOpacity
 									style={[
 										styles.favoriteButton,
+										{ backgroundColor: theme.card },
 										isFavorite(item.id) && styles.favoriteButtonActive,
 									]}
 									onPress={() => handleLikePress(item)}
@@ -276,7 +288,7 @@ const HomeScreen = () => {
 									<Ionicons
 										name={isFavorite(item.id) ? "heart" : "heart-outline"}
 										size={22}
-										color={isFavorite(item.id) ? "#FF3B30" : "#666"}
+										color={isFavorite(item.id) ? "#FF3B30" : theme.icon}
 									/>
 								</TouchableOpacity>
 							</View>
@@ -299,16 +311,13 @@ const styles = StyleSheet.create({
 	headerTitle: {
 		fontSize: 20,
 		fontWeight: "bold",
-		color: "#333",
 	},
 	loginButton: {
-		backgroundColor: "#2196F3",
 		paddingHorizontal: 25,
 		paddingVertical: 6,
 		borderRadius: 25,
 	},
 	loginText: {
-		color: "#fff",
 		fontSize: 13,
 		fontWeight: "600",
 	},
@@ -344,7 +353,6 @@ const styles = StyleSheet.create({
 		marginHorizontal: 4,
 	},
 	activeDot: {
-		backgroundColor: "#2196F3",
 		width: 20,
 	},
 	menuGrid: {
@@ -362,7 +370,6 @@ const styles = StyleSheet.create({
 		width: 70,
 		height: 70,
 		borderRadius: 40,
-		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 		elevation: 3,
@@ -377,7 +384,6 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		fontSize: 13,
 		textAlign: "center",
-		color: "#333",
 	},
 	recommendationSection: {
 		paddingHorizontal: 20,
@@ -390,7 +396,6 @@ const styles = StyleSheet.create({
 	},
 	card: {
 		flexDirection: "row",
-		backgroundColor: "#fff",
 		borderRadius: 20,
 		marginBottom: 15,
 		padding: 15,
@@ -425,7 +430,6 @@ const styles = StyleSheet.create({
 	},
 	cardAddress: {
 		fontSize: 12,
-		color: "#999",
 		marginBottom: 8,
 	},
 	cardFooter: {
@@ -436,27 +440,12 @@ const styles = StyleSheet.create({
 	ratingContainer: {
 		flexDirection: "row",
 	},
-	starFull: {
-		fontSize: 18,
-		color: "#FFB800",
-	},
-	starHalf: {
-		fontSize: 18,
-		color: "#FFB800",
-		opacity: 0.5,
-	},
-	starEmpty: {
-		fontSize: 18,
-		color: "#E0E0E0",
-	},
 	detailButton: {
-		backgroundColor: "#2196F3",
 		paddingHorizontal: 14,
 		paddingVertical: 7,
 		borderRadius: 18,
 	},
 	detailButtonText: {
-		color: "#fff",
 		fontSize: 12,
 		fontWeight: "600",
 	},
@@ -467,7 +456,6 @@ const styles = StyleSheet.create({
 		width: 36,
 		height: 36,
 		borderRadius: 18,
-		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 		elevation: 5,

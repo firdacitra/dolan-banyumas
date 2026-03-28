@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
 	View,
 	Text,
@@ -6,115 +6,54 @@ import {
 	ScrollView,
 	Image,
 	TouchableOpacity,
-	TextInput,
-	Pressable,
+	Dimensions,
 	Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons"; 
+import { getRecommendations } from "../../../constant/dataMenu"; 
+import { eventData } from "../../../constant/dataEvent"; 
+import { useFavorites } from "../../../context/FavoriteContext";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN INI
 
-import { getAllData } from "../../../constant/dataMenu";
-import { useFavorites } from "../../../context/FavoriteContext"; 
+const { width } = Dimensions.get("window");
 
-/* ================= THEME ================= */
-const lightTheme = {
-	gradientColors: ["#24ccff", "#aaf1ff", "#e0efff"],
-	card: "#FFFFFF",
-	text: "#000000",
-	textSecondary: "#666666",
-	primary: "#057eff",
-};
-
-const theme = lightTheme;
-
-/* ================= FILTER ================= */
-const FILTERS = [
-	"Semua",
-	"Wisata Alam",
-	"Wisata Buatan",
-	"Kuliner",
-	"Penginapan",
-	"Oleh-oleh",
-	"Desa Wisata",
-	"Biro Perjalanan",
-];
-
-const SearchScreen = () => {
+const HomeScreen = () => {
 	const navigation = useNavigation();
-
-	// GUNAKAN FAVORITES CONTEXT
 	const { isFavorite, toggleFavorite } = useFavorites();
+	const { t } = useLanguage();
+	const { theme } = useTheme(); // TAMBAHKAN INI
 
-	const [searchQuery, setSearchQuery] = useState("");
-	const [activeFilter, setActiveFilter] = useState("Semua");
-	const [showFilter, setShowFilter] = useState(false);
+	const [activeSlide, setActiveSlide] = useState(0);
+	const scrollViewRef = useRef(null);
 	const [isLogin, setIsLogin] = useState(false);
 
-	const allData = useMemo(() => getAllData(), []);
+	const recommendations = getRecommendations(5);
+	const bannerImages = eventData;
 
-	// Cek status login
 	useEffect(() => {
-		checkLoginStatus();
-
-		const unsubscribe = navigation.addListener("focus", checkLoginStatus);
+		checkLogin();
+		const unsubscribe = navigation.addListener("focus", checkLogin);
 		return unsubscribe;
 	}, [navigation]);
 
-	const checkLoginStatus = async () => {
+	const checkLogin = async () => {
 		const status = await AsyncStorage.getItem("isLogin");
 		setIsLogin(status === "true");
 	};
 
-	/* ================= HANDLE LIKE ================= */
-	const handleLikePress = async (item) => {
-		const loginStatus = await AsyncStorage.getItem("isLogin");
-
-		if (loginStatus !== "true") {
-			Alert.alert(
-				"Belum Login",
-				"Anda harus login terlebih dahulu untuk menyukai item",
-				[
-					{ text: "Batal", style: "cancel" },
-					{ text: "Login", onPress: () => navigation.navigate("Login") },
-				],
-			);
-			return;
-		}
-
-		const result = await toggleFavorite(item);
-		if (result && result.message) {
-			// Tampilkan pesan singkat (bisa diganti dengan toast)
-			Alert.alert("Info", result.message);
-		}
+	const handleScroll = (event) => {
+		const slideSize = event.nativeEvent.layoutMeasurement.width;
+		const offset = event.nativeEvent.contentOffset.x;
+		const activeIndex = Math.round(offset / slideSize);
+		setActiveSlide(activeIndex);
 	};
 
-	/* ================= FILTER + SEARCH ================= */
-	const filteredData = useMemo(() => {
-		let data = allData;
-
-		if (searchQuery) {
-			const q = searchQuery.toLowerCase();
-
-			data = data.filter((item) => {
-				const name = item?.name?.toLowerCase() || "";
-				const address = item?.address?.toLowerCase() || "";
-
-				return name.includes(q) || address.includes(q);
-			});
-		}
-
-		if (activeFilter !== "Semua") {
-			data = data.filter((item) => item.category === activeFilter);
-		}
-
-		return data;
-	}, [searchQuery, activeFilter, allData]);
-
-	/* ================= STAR ================= */
-	const renderStars = (rating = 0) => {
+	const renderStars = (rating) => {
 		const stars = [];
 		const fullStars = Math.floor(rating);
 		const hasHalfStar = rating % 1 !== 0;
@@ -122,29 +61,28 @@ const SearchScreen = () => {
 		for (let i = 0; i < 5; i++) {
 			if (i < fullStars) {
 				stars.push(
-					<Text key={i} style={styles.starFull}>
+					<Text key={i} style={[styles.starFull, { color: theme.starFull }]}>
 						★
 					</Text>,
 				);
 			} else if (i === fullStars && hasHalfStar) {
 				stars.push(
-					<Text key={i} style={styles.starHalf}>
+					<Text key={i} style={[styles.starHalf, { color: theme.starHalf }]}>
 						★
 					</Text>,
 				);
 			} else {
 				stars.push(
-					<Text key={i} style={styles.starEmpty}>
+					<Text key={i} style={[styles.starEmpty, { color: theme.starEmpty }]}>
 						★
 					</Text>,
 				);
 			}
 		}
-
 		return stars;
 	};
 
-	const getCategoryBadgeColor = (categoryName) => {
+	const getCategoryBadgeColor = (category) => {
 		const colors = {
 			"Wisata Alam": "#FF5757",
 			"Wisata Buatan": "#FF5757",
@@ -154,330 +92,394 @@ const SearchScreen = () => {
 			"Desa Wisata": "#2196F3",
 			"Biro Perjalanan": "#FF6B9D",
 		};
-
-		return colors[categoryName] || "#FF5757";
+		return colors[category] || "#FF5757";
 	};
 
+	const handleLikePress = async (item) => {
+		const loginStatus = await AsyncStorage.getItem("isLogin");
+
+		if (loginStatus !== "true") {
+			Alert.alert(
+				t('login') || "Belum Login",
+				"Anda harus login terlebih dahulu untuk menyukai item",
+				[
+					{ text: t('cancel') || "Batal", style: "cancel" },
+					{ text: t('login') || "Login", onPress: () => navigation.navigate("Login") },
+				],
+			);
+			return;
+		}
+
+		const result = await toggleFavorite(item);
+		if (result && result.message) {
+			Alert.alert("Info", result.message);
+		}
+	};
+
+	const menuCategories = [
+		{
+			id: 1,
+			title: t('touristAttractions') || "Objek Wisata",
+			icon: require("../../../assets/logo_wisata.png"),
+			route: "MenuList",
+			params: { category: "objekWisata" },
+		},
+		{
+			id: 2,
+			title: t('culinary') || "Kuliner",
+			icon: require("../../../assets/logo_kuliner.png"),
+			route: "MenuList",
+			params: { category: "kuliner" },
+		},
+		{
+			id: 3,
+			title: t('accommodation') || "Penginapan",
+			icon: require("../../../assets/logo_penginapan.png"),
+			route: "MenuList",
+			params: { category: "penginapan" },
+		},
+		{
+			id: 4,
+			title: t('souvenirs') || "Oleh-oleh",
+			icon: require("../../../assets/logo_oleh2.jpeg"),
+			route: "MenuList",
+			params: { category: "olehOleh" },
+		},
+		{
+			id: 5,
+			title: t('touristVillage') || "Desa Wisata",
+			icon: require("../../../assets/logo_desaWisata.jpeg"),
+			route: "MenuList",
+			params: { category: "desaWisata" },
+		},
+		{
+			id: 6,
+			title: t('travelAgency') || "Biro Perjalanan",
+			icon: require("../../../assets/logo_biro.png"),
+			route: "MenuList",
+			params: { category: "biroPerjalanan" },
+		},
+	];
+
 	return (
-		<LinearGradient colors={theme.gradientColors} style={{ flex: 1 }}>
-			<SafeAreaView style={styles.container}>
-				{/* SEARCH */}
-				<View style={styles.header}>
-					<View style={styles.searchBox}>
-						<Ionicons name="search" size={18} color="#999" />
-
-						<TextInput
-							placeholder="Cari wisata, kuliner, penginapan..."
-							placeholderTextColor="#999"
-							style={styles.searchInput}
-							value={searchQuery}
-							onChangeText={setSearchQuery}
-							onFocus={() => setShowFilter(true)}
-						/>
-
-						<Pressable onPress={() => setShowFilter(!showFilter)}>
-							<Ionicons name="options-outline" size={20} color="#666" />
-						</Pressable>
+		<LinearGradient
+			colors={theme.gradientColors} // GANTI: pakai theme
+			style={{ flex: 1 }}
+		>
+			<SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<View style={styles.header}>
+						<Text style={[styles.headerTitle, { color: theme.text }]}>{t('homeTitle')}</Text>
+						{!isLogin && (
+							<TouchableOpacity
+								style={[styles.loginButton, { backgroundColor: theme.primary }]}
+								onPress={() => navigation.navigate("Login")}
+							>
+								<Text style={styles.loginText}>{t('login')}</Text>
+							</TouchableOpacity>
+						)}
 					</View>
 
-					{showFilter && (
-						<View style={styles.filterDropdown}>
-							{FILTERS.map((filter) => (
+					{/* Banner */}
+					<View style={styles.bannerContainer}>
+						<ScrollView
+							ref={scrollViewRef}
+							horizontal
+							pagingEnabled
+							showsHorizontalScrollIndicator={false}
+							onScroll={handleScroll}
+							scrollEventThrottle={16}
+						>
+							{bannerImages.map((item) => (
 								<TouchableOpacity
-									key={filter}
-									style={[
-										styles.filterItem,
-										activeFilter === filter && styles.filterItemActive,
-									]}
-									onPress={() => {
-										setActiveFilter(filter);
-										setShowFilter(false);
-									}}
+									key={item.id}
+									style={styles.bannerSlide}
+									activeOpacity={0.9}
+									onPress={() => navigation.navigate("Detail", { item })}
 								>
-									<Text
-										style={[
-											styles.filterText,
-											activeFilter === filter && styles.filterTextActive,
-										]}
-									>
-										{filter}
-									</Text>
+									<View style={styles.bannerImageContainer}>
+										<Image source={item.image} style={styles.bannerImage} />
+									</View>
 								</TouchableOpacity>
 							))}
+						</ScrollView>
+						<View style={styles.dotsContainer}>
+							{bannerImages.map((_, index) => (
+								<View
+									key={index}
+									style={[
+										styles.dot,
+										activeSlide === index && styles.activeDot,
+									]}
+								/>
+							))}
 						</View>
-					)}
-				</View>
+					</View>
 
-				{/* LIST */}
-				<ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-					{filteredData.length > 0 ? (
-						filteredData.map((item) => {
-							const isFav = isFavorite(item.id);
+					{/* Menu Kategori */}
+					<View style={styles.menuGrid}>
+						{menuCategories.map((menu) => (
+							<TouchableOpacity
+								key={menu.id}
+								style={styles.menuItem}
+								onPress={() => navigation.navigate(menu.route, menu.params)}
+							>
+								<View style={[styles.menuIconContainer, { backgroundColor: theme.card }]}>
+									<Image source={menu.icon} style={styles.menuIcon} />
+								</View>
+								<Text style={[styles.menuTitle, { color: theme.text }]}>{menu.title}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
 
-							return (
-								<View key={item.id} style={styles.card}>
-									<Image source={item.image} style={styles.image} />
+					{/* Rekomendasi */}
+					<View style={styles.recommendationSection}>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>{t('recommendations')}</Text>
 
-									<View style={styles.content}>
-										<Text
-											style={[
-												styles.category,
-												{
-													backgroundColor: getCategoryBadgeColor(item.category),
-												},
-											]}
-										>
-											{item.category}
-										</Text>
+						{recommendations.map((item) => (
+							<View key={item.id} style={[styles.card, { backgroundColor: theme.card }]}>
+								<Image source={item.image} style={styles.cardImage} />
 
-										<Text style={styles.title}>{item.name}</Text>
-
-										<Text style={styles.address}>{item.address}</Text>
-
-										<View style={styles.footer}>
-											<View style={styles.rating}>
-												{renderStars(item.rating)}
-											</View>
-
-											<TouchableOpacity
-												style={styles.detailBtn}
-												onPress={() => navigation.navigate("Detail", { item })}
-											>
-												<Text style={styles.detailText}>
-													Lihat selengkapnya
-												</Text>
-											</TouchableOpacity>
-										</View>
+								<View style={styles.cardContent}>
+									<View
+										style={[
+											styles.categoryBadge,
+											{ backgroundColor: getCategoryBadgeColor(item.category) },
+										]}
+									>
+										<Text style={styles.categoryText}>{item.category}</Text>
 									</View>
 
-									{/* TOMBOL FAVORITE DENGAN CONTEXT */}
-									<TouchableOpacity
-										style={[
-											styles.favoriteButton,
-											isFav && styles.favoriteButtonActive,
-										]}
-										onPress={() => handleLikePress(item)}
-									>
-										<Ionicons
-											name={isFav ? "heart" : "heart-outline"}
-											size={18}
-											color={isFav ? "#FF3B30" : "#666"}
-										/>
-									</TouchableOpacity>
+									<Text style={[styles.cardTitle, { color: theme.text }]}>{item.name}</Text>
+									<Text style={[styles.cardAddress, { color: theme.textSecondary }]}>{item.address}</Text>
+
+									<View style={styles.cardFooter}>
+										<View style={styles.ratingContainer}>
+											{renderStars(item.rating)}
+										</View>
+
+										<TouchableOpacity
+											style={[styles.detailButton, { backgroundColor: theme.primary }]}
+											onPress={() => navigation.navigate("Detail", { item })}
+										>
+											<Text style={styles.detailButtonText}>
+												{t('viewDetail')}
+											</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
-							);
-						})
-					) : (
-						<View style={styles.empty}>
-							<Ionicons name="search-outline" size={50} color="#999" />
-							<Text style={styles.emptyText}>Data tidak ditemukan</Text>
-							{searchQuery && (
+
+								{/* TOMBOL FAVORITE PAKAI IONICONS */}
 								<TouchableOpacity
-									style={styles.clearButton}
-									onPress={() => {
-										setSearchQuery("");
-										setActiveFilter("Semua");
-									}}
+									style={[
+										styles.favoriteButton,
+										{ backgroundColor: theme.card },
+										isFavorite(item.id) && styles.favoriteButtonActive,
+									]}
+									onPress={() => handleLikePress(item)}
 								>
-									<Text style={styles.clearButtonText}>Reset Pencarian</Text>
+									<Ionicons
+										name={isFavorite(item.id) ? "heart" : "heart-outline"}
+										size={22}
+										color={isFavorite(item.id) ? "#FF3B30" : theme.icon}
+									/>
 								</TouchableOpacity>
-							)}
-						</View>
-					)}
+							</View>
+						))}
+					</View>
 				</ScrollView>
 			</SafeAreaView>
 		</LinearGradient>
 	);
 };
 
-export default SearchScreen;
-
-/* ================= STYLE ================= */
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "transparent",
-	},
-
 	header: {
-		paddingHorizontal: 16,
-		paddingTop: 10,
-		zIndex: 10,
-	},
-
-	searchBox: {
 		flexDirection: "row",
+		justifyContent: "space-between",
 		alignItems: "center",
-		backgroundColor: "#fff",
+		paddingHorizontal: 20,
+		paddingVertical: 15,
+	},
+	headerTitle: {
+		fontSize: 20,
+		fontWeight: "bold",
+		color: "#333",
+	},
+	loginButton: {
+		backgroundColor: "#2196F3",
+		paddingHorizontal: 25,
+		paddingVertical: 6,
 		borderRadius: 25,
-		paddingHorizontal: 15,
-		height: 46,
-		gap: 8,
-		elevation: 4,
 	},
-
-	searchInput: {
-		flex: 1,
-		fontSize: 14,
-		color: theme.text,
-	},
-
-	filterDropdown: {
-		marginTop: 8,
-		backgroundColor: "#fff",
-		borderRadius: 16,
-		paddingVertical: 8,
-		elevation: 5,
-	},
-
-	filterItem: {
-		paddingVertical: 10,
-		paddingHorizontal: 16,
-	},
-
-	filterItemActive: {
-		backgroundColor: "#E3F2FD",
-	},
-
-	filterText: {
+	loginText: {
+		color: "#fff",
 		fontSize: 13,
-		color: "#555",
-	},
-
-	filterTextActive: {
-		color: theme.primary,
 		fontWeight: "600",
 	},
-
-	list: {
-		paddingHorizontal: 16,
-		paddingTop: 10,
+	bannerContainer: {
+		marginVertical: 10,
 	},
-
+	bannerSlide: {
+		width: width,
+		paddingHorizontal: 20,
+	},
+	bannerImageContainer: {
+		width: "100%",
+		height: 180,
+		borderRadius: 20,
+		overflow: "hidden",
+	},
+	bannerImage: {
+		width: "100%",
+		height: 220,
+		position: "absolute",
+		top: 0,
+	},
+	dotsContainer: {
+		flexDirection: "row",
+		justifyContent: "center",
+		marginTop: 15,
+	},
+	dot: {
+		width: 7,
+		height: 7,
+		borderRadius: 4,
+		backgroundColor: "#D3D3D3",
+		marginHorizontal: 4,
+	},
+	activeDot: {
+		backgroundColor: "#2196F3",
+		width: 20,
+	},
+	menuGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		paddingHorizontal: 10,
+		marginVertical: 10,
+	},
+	menuItem: {
+		width: "33.33%",
+		alignItems: "center",
+		marginBottom: 20,
+	},
+	menuIconContainer: {
+		width: 70,
+		height: 70,
+		borderRadius: 40,
+		backgroundColor: "#fff",
+		justifyContent: "center",
+		alignItems: "center",
+		elevation: 3,
+	},
+	menuIcon: {
+		width: 60,
+		height: 60,
+		resizeMode: "contain",
+		borderRadius: 25,
+	},
+	menuTitle: {
+		marginTop: 8,
+		fontSize: 13,
+		textAlign: "center",
+		color: "#333",
+	},
+	recommendationSection: {
+		paddingHorizontal: 20,
+		marginTop: 10,
+	},
+	sectionTitle: {
+		fontSize: 17,
+		fontWeight: "bold",
+		marginBottom: 15,
+	},
 	card: {
 		flexDirection: "row",
-		backgroundColor: theme.card,
+		backgroundColor: "#fff",
 		borderRadius: 20,
-		padding: 14,
-		marginBottom: 14,
-		elevation: 5,
+		marginBottom: 15,
+		padding: 15,
+		elevation: 4,
 		position: "relative",
 	},
-
-	image: {
-		width: 90,
-		height: 90,
+	cardImage: {
+		width: 95,
+		height: 95,
 		borderRadius: 16,
 	},
-
-	content: {
+	cardContent: {
 		flex: 1,
-		marginLeft: 12,
+		paddingLeft: 12,
+		justifyContent: "space-between",
 	},
-
-	category: {
+	categoryBadge: {
 		alignSelf: "flex-start",
 		paddingHorizontal: 10,
 		paddingVertical: 3,
 		borderRadius: 12,
-		fontSize: 11,
-		color: "#fff",
-		fontWeight: "600",
 		marginBottom: 6,
 	},
-
-	title: {
+	categoryText: {
+		color: "#fff",
+		fontSize: 11,
+		fontWeight: "600",
+	},
+	cardTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: theme.text,
 	},
-
-	address: {
+	cardAddress: {
 		fontSize: 12,
-		color: theme.textSecondary,
-		marginVertical: 4,
+		color: "#999",
+		marginBottom: 8,
 	},
-
-	footer: {
+	cardFooter: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginTop: 6,
 	},
-
-	rating: {
+	ratingContainer: {
 		flexDirection: "row",
 	},
-
-	detailBtn: {
-		backgroundColor: theme.primary,
+	starFull: {
+		fontSize: 18,
+		color: "#FFB800",
+	},
+	starHalf: {
+		fontSize: 18,
+		color: "#FFB800",
+		opacity: 0.5,
+	},
+	starEmpty: {
+		fontSize: 18,
+		color: "#E0E0E0",
+	},
+	detailButton: {
+		backgroundColor: "#2196F3",
 		paddingHorizontal: 14,
-		paddingVertical: 6,
+		paddingVertical: 7,
 		borderRadius: 18,
 	},
-
-	detailText: {
+	detailButtonText: {
 		color: "#fff",
 		fontSize: 12,
 		fontWeight: "600",
 	},
-
 	favoriteButton: {
 		position: "absolute",
 		top: 10,
 		right: 10,
-		width: 32,
-		height: 32,
-		borderRadius: 16,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
-		elevation: 4,
+		elevation: 5,
 	},
 	favoriteButtonActive: {
 		backgroundColor: "#FFE5E5",
 	},
-
-	empty: {
-		paddingVertical: 80,
-		alignItems: "center",
-	},
-
-	emptyText: {
-		color: "#999",
-		fontSize: 14,
-		marginTop: 10,
-	},
-
-	clearButton: {
-		marginTop: 20,
-		paddingHorizontal: 20,
-		paddingVertical: 10,
-		backgroundColor: theme.primary,
-		borderRadius: 20,
-	},
-
-	clearButtonText: {
-		color: "#fff",
-		fontWeight: "600",
-	},
-
-	starFull: {
-		color: "#FFB800",
-		fontSize: 18,
-		marginRight: 2,
-	},
-
-	starHalf: {
-		color: "#FFB800",
-		fontSize: 18,
-		marginRight: 2,
-		opacity: 0.5,
-	},
-
-	starEmpty: {
-		color: "#DADADA",
-		fontSize: 18,
-		marginRight: 2,
-	},
 });
+
+export default HomeScreen;

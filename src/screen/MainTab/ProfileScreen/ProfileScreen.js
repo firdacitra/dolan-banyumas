@@ -14,45 +14,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const ProfileScreen = ({ navigation, route }) => {
-  // Mock i18n function untuk terjemahan
-  const i18n = {
-    t: (key) => {
-      const translations = {
-        'lastSeen': 'Terakhir Dilihat',
-        'myFavorites': 'Favorit Saya',
-        'language': 'Bahasa',
-        'accessibility': 'Aksesibilitas',
-        'rating': 'Penilaian',
-        'account': 'Akun',
-        'activity': 'Aktivitas',
-        'appSettings': 'Pengaturan Aplikasi',
-        'others': 'Lainnya',
-        'username': 'Username',
-        'editProfile': 'Edit Profil',
-        'changePhoto': 'Ubah Foto Profil',
-        'takePhoto': 'Ambil Foto',
-        'chooseFromGallery': 'Pilih dari Galeri',
-        'deletePhoto': 'Hapus Foto'
-      };
-      return translations[key] || key;
-    }
-  };
-
-  // Default theme (light theme)
-  const theme = {
-		gradientColors: ["#24ccff", "#aaf1ff", "#e0efff"],
-		card: "#FFFFFF",
-		text: "#000000",
-		textSecondary: "#666666",
-		primary: "#057eff",
-	};
+  const { t } = useLanguage(); // GUNAKAN useLanguage()
+  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
 
   // State untuk data profil
   const [profileData, setProfileData] = useState({
     image: "https://via.placeholder.com/70",
-    username: i18n.t('username'),
+    username: t('username'),
     phone: "08123456789",
     email: "username@gmail.com"
   });
@@ -147,23 +119,23 @@ const ProfileScreen = ({ navigation, route }) => {
   const menuItems = [
     { 
       id: 1, 
-      title: i18n.t('lastSeen'), 
+      title: t('lastSeen'), 
       icon: "time-outline",
-      section: i18n.t('activity'),
+      section: t('activity'),
       onPress: () => navigation.navigate('LastSeen')
     },
     { 
       id: 2, 
-      title: i18n.t('myFavorites'), 
+      title: t('myFavorites'), 
       icon: "heart-outline",
-      section: i18n.t('activity'),
+      section: t('activity'),
       onPress: () => navigation.navigate('Favorites')
     },
     { 
       id: 3, 
-      title: i18n.t('language'), 
+      title: t('language'), 
       icon: "globe-outline",
-      section: i18n.t('appSettings'),
+      section: t('appSettings'),
       onPress: () => {
         if (navigation && navigation.navigate) {
           navigation.navigate('Language');
@@ -172,9 +144,9 @@ const ProfileScreen = ({ navigation, route }) => {
     },
     { 
       id: 4, 
-      title: i18n.t('accessibility'), 
+      title: t('accessibility'), 
       icon: "accessibility-outline",
-      section: i18n.t('appSettings'),
+      section: t('appSettings'),
       onPress: () => {
         if (navigation && navigation.navigate) {
           navigation.navigate('Accessibility');
@@ -183,16 +155,16 @@ const ProfileScreen = ({ navigation, route }) => {
     },
     { 
       id: 5, 
-      title: i18n.t('rating'), 
+      title: t('rating'), 
       icon: "star-outline",
-      section: i18n.t('others'),
+      section: t('others'),
       onPress: () => navigation.navigate('Rating')
     },
     { 
       id: 6, 
-      title: i18n.t('account'), 
+      title: t('account'), 
       icon: "person-outline",
-      section: i18n.t('others'),
+      section: t('others'),
       onPress: () => navigation.navigate('Account')
     },
   ];
@@ -221,9 +193,9 @@ const ProfileScreen = ({ navigation, route }) => {
     );
   };
 
-  const aktivitasItems = menuItems.filter(item => item.section === i18n.t('activity'));
-  const pengaturanItems = menuItems.filter(item => item.section === i18n.t('appSettings'));
-  const lainnyaItems = menuItems.filter(item => item.section === i18n.t('others'));
+  const aktivitasItems = menuItems.filter(item => item.section === t('activity'));
+  const pengaturanItems = menuItems.filter(item => item.section === t('appSettings'));
+  const lainnyaItems = menuItems.filter(item => item.section === t('others'));
 
   return (
     <LinearGradient
@@ -268,15 +240,15 @@ const ProfileScreen = ({ navigation, route }) => {
               })}
               activeOpacity={0.7}
             >
-              <Text style={styles.editProfileText}>{i18n.t('editProfile')}</Text>
+              <Text style={styles.editProfileText}>{t('editProfile')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Menu Sections */}
           <View style={styles.menuContainer}>
-            {renderMenuSection(i18n.t('activity'), aktivitasItems)}
-            {renderMenuSection(i18n.t('appSettings'), pengaturanItems)}
-            {renderMenuSection(i18n.t('others'), lainnyaItems)}
+            {renderMenuSection(t('activity'), aktivitasItems)}
+            {renderMenuSection(t('appSettings'), pengaturanItems)}
+            {renderMenuSection(t('others'), lainnyaItems)}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -294,27 +266,27 @@ const ProfileScreen = ({ navigation, route }) => {
           onPress={() => setShowImageOptions(false)}
         >
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>{i18n.t('changePhoto')}</Text>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('changePhoto')}</Text>
               <TouchableOpacity onPress={() => setShowImageOptions(false)}>
                 <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
-              style={styles.modalOption}
+              style={[styles.modalOption, { borderBottomColor: theme.border }]}
               onPress={takePhoto}
             >
               <Ionicons name="camera-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{i18n.t('takePhoto')}</Text>
+              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('takePhoto')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.modalOption}
+              style={[styles.modalOption, { borderBottomColor: theme.border }]}
               onPress={pickImage}
             >
               <Ionicons name="image-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{i18n.t('chooseFromGallery')}</Text>
+              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('chooseFromGallery')}</Text>
             </TouchableOpacity>
 
             {profileData.image !== "https://via.placeholder.com/70" && (
@@ -327,7 +299,7 @@ const ProfileScreen = ({ navigation, route }) => {
               >
                 <Ionicons name="trash-outline" size={24} color="#FF3B30" />
                 <Text style={[styles.modalOptionText, styles.modalOptionTextDanger]}>
-                  {i18n.t('deletePhoto')}
+                  {t('deletePhoto')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -479,7 +451,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   modalTitle: {
     fontSize: 18,
@@ -491,7 +462,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   modalOptionText: {
     fontSize: 16,

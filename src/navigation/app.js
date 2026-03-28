@@ -1,6 +1,7 @@
 // src/navigation/app.js
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext"; // TAMBAHKAN INI
 
 // Import screen components
 import HomeScreen from "../screen/MainTab/HomeScreen/index";
@@ -10,11 +11,19 @@ import ProfileScreen from "../screen/MainTab/ProfileScreen/ProfileScreen";
 const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
+  const { theme } = useTheme(); // TAMBAHKAN INI
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#2B7FFF",
+        tabBarActiveTintColor: theme.primary,       // GANTI: ikut theme
+        tabBarInactiveTintColor: theme.icon,         // TAMBAHKAN INI
+        tabBarStyle: {                               // TAMBAHKAN INI
+          backgroundColor: theme.header,
+          borderTopColor: theme.border,
+          borderTopWidth: 1,
+        },
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "Home") iconName = "home";
