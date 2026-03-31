@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Alert,
   Image,
@@ -18,297 +19,380 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
 
 const ProfileScreen = ({ navigation, route }) => {
-  const { t } = useLanguage(); // GUNAKAN useLanguage()
-  const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
+	const { t } = useLanguage(); // GUNAKAN useLanguage()
+	const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
 
-  // State untuk data profil
-  const [profileData, setProfileData] = useState({
-    image: "https://via.placeholder.com/70",
-    username: t('username'),
-    phone: "08123456789",
-    email: "username@gmail.com"
-  });
+	// State untuk data profil
+	const [profileData, setProfileData] = useState({
+		image: "https://via.placeholder.com/70",
+		username: t("username"),
+		phone: "08123456789",
+		email: "username@gmail.com",
+	});
 
-  const [showImageOptions, setShowImageOptions] = useState(false);
+	const [showImageOptions, setShowImageOptions] = useState(false);
+	const loadUserProfile = async () => {
+		try {
+			const username = await AsyncStorage.getItem("currentUser");
 
-  // Terima data dari EditProfile
-  useEffect(() => {
-    if (route.params?.updatedProfile) {
-      setProfileData(route.params.updatedProfile);
-    }
-  }, [route.params?.updatedProfile]);
+			if (!username) {
+				// 🔥 USER SUDAH LOGOUT → RESET KE DEFAULT
+				setProfileData({
+					image: "https://via.placeholder.com/70",
+					username: t("username"),
+					phone: "-",
+					email: "-",
+				});
+				return;
+			}
 
-  // Fungsi untuk meminta permission
-  const requestPermission = async (type) => {
-    if (type === 'camera') {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Maaf, kami memerlukan izin kamera!');
-        return false;
-      }
-    } else {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Maaf, kami memerlukan izin akses galeri!');
-        return false;
-      }
-    }
-    return true;
-  };
+			const storedProfile = await AsyncStorage.getItem(
+				`user_${username}_profile`,
+			);
 
-  // Fungsi untuk mengambil foto dari kamera
-  const takePhoto = async () => {
-    setShowImageOptions(false);
+			if (storedProfile) {
+				setProfileData(JSON.parse(storedProfile));
+			} else {
+				setProfileData({
+					image: "https://via.placeholder.com/70",
+					username: username,
+					phone: "-",
+					email: "-",
+				});
+			}
+		} catch (error) {
+			console.log("Error load profile:", error);
+		}
+	};
 
-    if (Platform.OS === 'web') {
-      // Untuk web/laptop — buka kamera langsung
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'user';
+	useEffect(() => {
+		const loadProfile = async () => {
+			const username = await AsyncStorage.getItem("currentUser");
 
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setProfileData({...profileData, image: event.target.result});
-        };
-        reader.readAsDataURL(file);
-      };
+			if (username) {
+				const savedProfile = await AsyncStorage.getItem(
+					`user_${username}_profile`,
+				);
 
-      input.click();
-      return;
-    }
+				if (savedProfile) {
+					setProfileData(JSON.parse(savedProfile));
+				}
+			}
+		};
 
-    // Mobile
-    const hasPermission = await requestPermission('camera');
-    if (!hasPermission) return;
+		loadProfile();
+	}, []);
 
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+	useEffect(() => {
+		const unsubscribe = navigation.addListener("focus", loadUserProfile);
+		return unsubscribe;
+	}, [navigation]);
+	// Fungsi untuk meminta permission
+	const requestPermission = async (type) => {
+		if (type === "camera") {
+			const { status } = await ImagePicker.requestCameraPermissionsAsync();
+			if (status !== "granted") {
+				Alert.alert("Permission Denied", "Maaf, kami memerlukan izin kamera!");
+				return false;
+			}
+		} else {
+			const { status } =
+				await ImagePicker.requestMediaLibraryPermissionsAsync();
+			if (status !== "granted") {
+				Alert.alert(
+					"Permission Denied",
+					"Maaf, kami memerlukan izin akses galeri!",
+				);
+				return false;
+			}
+		}
+		return true;
+	};
 
-    if (!result.canceled) {
-      setProfileData({...profileData, image: result.assets[0].uri});
-    }
-  };
+	// Fungsi untuk mengambil foto dari kamera
+	const takePhoto = async () => {
+		setShowImageOptions(false);
 
-  // Fungsi untuk memilih foto dari galeri
-  const pickImage = async () => {
-    const hasPermission = await requestPermission('gallery');
-    if (!hasPermission) return;
+		if (Platform.OS === "web") {
+			// Untuk web/laptop — buka kamera langsung
+			const input = document.createElement("input");
+			input.type = "file";
+			input.accept = "image/*";
+			input.capture = "user";
 
-    setShowImageOptions(false);
+			input.onchange = (e) => {
+				const file = e.target.files[0];
+				if (!file) return;
+				const reader = new FileReader();
+				reader.onload = (event) => {
+					setProfileData({ ...profileData, image: event.target.result });
+				};
+				reader.readAsDataURL(file);
+			};
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+			input.click();
+			return;
+		}
 
-    if (!result.canceled) {
-      setProfileData({...profileData, image: result.assets[0].uri});
-    }
-  };
+		// Mobile
+		const hasPermission = await requestPermission("camera");
+		if (!hasPermission) return;
 
-  const menuItems = [
-    { 
-      id: 1, 
-      title: t('lastSeen'), 
-      icon: "time-outline",
-      section: t('activity'),
-      onPress: () => navigation.navigate('LastSeen')
-    },
-    { 
-      id: 2, 
-      title: t('myFavorites'), 
-      icon: "heart-outline",
-      section: t('activity'),
-      onPress: () => navigation.navigate('Favorites')
-    },
-    { 
-      id: 3, 
-      title: t('language'), 
-      icon: "globe-outline",
-      section: t('appSettings'),
-      onPress: () => {
-        if (navigation && navigation.navigate) {
-          navigation.navigate('Language');
-        }
-      }
-    },
-    { 
-      id: 4, 
-      title: t('accessibility'), 
-      icon: "accessibility-outline",
-      section: t('appSettings'),
-      onPress: () => {
-        if (navigation && navigation.navigate) {
-          navigation.navigate('Accessibility');
-        }
-      }
-    },
-    { 
-      id: 5, 
-      title: t('rating'), 
-      icon: "star-outline",
-      section: t('others'),
-      onPress: () => navigation.navigate('Rating')
-    },
-    { 
-      id: 6, 
-      title: t('account'), 
-      icon: "person-outline",
-      section: t('others'),
-      onPress: () => navigation.navigate('Account')
-    },
-  ];
+		let result = await ImagePicker.launchCameraAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
 
-  const renderMenuSection = (sectionTitle, items) => {
-    if (items.length === 0) return null;
-    
-    return (
-      <View key={sectionTitle} style={styles.sectionWrapper}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>{sectionTitle}</Text>
-        {items.map((item) => (
-          <TouchableOpacity 
-            key={item.id} 
-            style={[styles.menuItem, { backgroundColor: theme.card }]}
-            onPress={item.onPress}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuLeft}>
-              <Ionicons name={item.icon} size={20} color={theme.text} />
-              <Text style={[styles.menuText, { color: theme.text }]}>{item.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={theme.text} />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
+		if (!result.canceled) {
+			setProfileData({ ...profileData, image: result.assets[0].uri });
+		}
+	};
 
-  const aktivitasItems = menuItems.filter(item => item.section === t('activity'));
-  const pengaturanItems = menuItems.filter(item => item.section === t('appSettings'));
-  const lainnyaItems = menuItems.filter(item => item.section === t('others'));
+	// Fungsi untuk memilih foto dari galeri
+	const pickImage = async () => {
+		const hasPermission = await requestPermission("gallery");
+		if (!hasPermission) return;
 
-  return (
-    <LinearGradient
-      colors={theme.gradientColors}
-      locations={[0, 0.3, 1]}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header - Kosong karena tidak perlu judul */}
-          <View style={styles.header}>
-          </View>
+		setShowImageOptions(false);
 
-          {/* Profile Card */}
-          <View style={[styles.profileCard, { backgroundColor: theme.card }]}>
-            <View style={styles.profileContent}>
-              <TouchableOpacity 
-                style={styles.avatarContainer}
-                onPress={() => setShowImageOptions(true)}
-                activeOpacity={0.7}
-              >
-                <Image
-                  source={{ uri: profileData.image }}
-                  style={styles.avatar}
-                />
-              </TouchableOpacity>
-              <View style={styles.profileInfo}>
-                <Text style={[styles.username, { color: theme.text }]}>{profileData.username}</Text>
-                <Text style={[styles.phone, { color: theme.textSecondary }]}>{profileData.phone}</Text>
-                <Text style={[styles.email, { color: theme.textSecondary }]}>{profileData.email}</Text>
-              </View>
-            </View>
-            
-            {/* Tombol Edit Profil - Kirim data ke EditProfile */}
-            <TouchableOpacity 
-              style={[styles.editProfileButton, { backgroundColor: theme.primary }]}
-              onPress={() => navigation.navigate('EditProfile', {
-                currentImage: profileData.image,
-                currentUsername: profileData.username,
-                currentPhone: profileData.phone,
-                currentEmail: profileData.email
-              })}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.editProfileText}>{t('editProfile')}</Text>
-            </TouchableOpacity>
-          </View>
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
 
-          {/* Menu Sections */}
-          <View style={styles.menuContainer}>
-            {renderMenuSection(t('activity'), aktivitasItems)}
-            {renderMenuSection(t('appSettings'), pengaturanItems)}
-            {renderMenuSection(t('others'), lainnyaItems)}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+		if (!result.canceled) {
+			setProfileData({ ...profileData, image: result.assets[0].uri });
+		}
+	};
 
-      {/* Modal untuk pilihan foto */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showImageOptions}
-        onRequestClose={() => setShowImageOptions(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowImageOptions(false)}
-        >
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('changePhoto')}</Text>
-              <TouchableOpacity onPress={() => setShowImageOptions(false)}>
-                <Ionicons name="close" size={24} color={theme.textSecondary} />
-              </TouchableOpacity>
-            </View>
+	const menuItems = [
+		{
+			id: 1,
+			title: t("lastSeen"),
+			icon: "time-outline",
+			section: t("activity"),
+			onPress: () => navigation.navigate("LastSeen"),
+		},
+		{
+			id: 2,
+			title: t("myFavorites"),
+			icon: "heart-outline",
+			section: t("activity"),
+			onPress: () => navigation.navigate("Favorites"),
+		},
+		{
+			id: 3,
+			title: t("language"),
+			icon: "globe-outline",
+			section: t("appSettings"),
+			onPress: () => {
+				if (navigation && navigation.navigate) {
+					navigation.navigate("Language");
+				}
+			},
+		},
+		{
+			id: 4,
+			title: t("accessibility"),
+			icon: "accessibility-outline",
+			section: t("appSettings"),
+			onPress: () => {
+				if (navigation && navigation.navigate) {
+					navigation.navigate("Accessibility");
+				}
+			},
+		},
+		{
+			id: 5,
+			title: t("rating"),
+			icon: "star-outline",
+			section: t("others"),
+			onPress: () => navigation.navigate("Rating"),
+		},
+		{
+			id: 6,
+			title: t("account"),
+			icon: "person-outline",
+			section: t("others"),
+			onPress: () => navigation.navigate("Account"),
+		},
+	];
 
-            <TouchableOpacity 
-              style={[styles.modalOption, { borderBottomColor: theme.border }]}
-              onPress={takePhoto}
-            >
-              <Ionicons name="camera-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('takePhoto')}</Text>
-            </TouchableOpacity>
+	const renderMenuSection = (sectionTitle, items) => {
+		if (items.length === 0) return null;
 
-            <TouchableOpacity 
-              style={[styles.modalOption, { borderBottomColor: theme.border }]}
-              onPress={pickImage}
-            >
-              <Ionicons name="image-outline" size={24} color={theme.primary} />
-              <Text style={[styles.modalOptionText, { color: theme.text }]}>{t('chooseFromGallery')}</Text>
-            </TouchableOpacity>
+		return (
+			<View key={sectionTitle} style={styles.sectionWrapper}>
+				<Text style={[styles.sectionTitle, { color: theme.text }]}>
+					{sectionTitle}
+				</Text>
+				{items.map((item) => (
+					<TouchableOpacity
+						key={item.id}
+						style={[styles.menuItem, { backgroundColor: theme.card }]}
+						onPress={item.onPress}
+						activeOpacity={0.7}
+					>
+						<View style={styles.menuLeft}>
+							<Ionicons name={item.icon} size={20} color={theme.text} />
+							<Text style={[styles.menuText, { color: theme.text }]}>
+								{item.title}
+							</Text>
+						</View>
+						<Ionicons name="chevron-forward" size={18} color={theme.text} />
+					</TouchableOpacity>
+				))}
+			</View>
+		);
+	};
 
-            {profileData.image !== "https://via.placeholder.com/70" && (
-              <TouchableOpacity 
-                style={[styles.modalOption, styles.modalOptionDanger]}
-                onPress={() => {
-                  setProfileData({...profileData, image: "https://via.placeholder.com/70"});
-                  setShowImageOptions(false);
-                }}
-              >
-                <Ionicons name="trash-outline" size={24} color="#FF3B30" />
-                <Text style={[styles.modalOptionText, styles.modalOptionTextDanger]}>
-                  {t('deletePhoto')}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </LinearGradient>
-  );
-};
+	const aktivitasItems = menuItems.filter(
+		(item) => item.section === t("activity"),
+	);
+	const pengaturanItems = menuItems.filter(
+		(item) => item.section === t("appSettings"),
+	);
+	const lainnyaItems = menuItems.filter((item) => item.section === t("others"));
+
+	return (
+		<LinearGradient
+			colors={theme.gradientColors}
+			locations={[0, 0.3, 1]}
+			style={styles.container}
+		>
+			<SafeAreaView style={styles.safeArea}>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					{/* Header - Kosong karena tidak perlu judul */}
+					<View style={styles.header}></View>
+
+					{/* Profile Card */}
+					<View style={[styles.profileCard, { backgroundColor: theme.card }]}>
+						<View style={styles.profileContent}>
+							<TouchableOpacity
+								style={styles.avatarContainer}
+								onPress={() => setShowImageOptions(true)}
+								activeOpacity={0.7}
+							>
+								<Image
+									source={{ uri: profileData.image }}
+									style={styles.avatar}
+								/>
+							</TouchableOpacity>
+							<View style={styles.profileInfo}>
+								<Text style={[styles.username, { color: theme.text }]}>
+									{profileData.username}
+								</Text>
+								<Text style={[styles.phone, { color: theme.textSecondary }]}>
+									{profileData.phone}
+								</Text>
+								<Text style={[styles.email, { color: theme.textSecondary }]}>
+									{profileData.email}
+								</Text>
+							</View>
+						</View>
+
+						{/* Tombol Edit Profil - Kirim data ke EditProfile */}
+						<TouchableOpacity
+							style={[
+								styles.editProfileButton,
+								{ backgroundColor: theme.primary },
+							]}
+							onPress={() =>
+								navigation.navigate("EditProfile", {
+									currentImage: profileData.image,
+									currentUsername: profileData.username,
+									currentPhone: profileData.phone,
+									currentEmail: profileData.email,
+								})
+							}
+							activeOpacity={0.7}
+						>
+							<Text style={styles.editProfileText}>{t("editProfile")}</Text>
+						</TouchableOpacity>
+					</View>
+
+					{/* Menu Sections */}
+					<View style={styles.menuContainer}>
+						{renderMenuSection(t("activity"), aktivitasItems)}
+						{renderMenuSection(t("appSettings"), pengaturanItems)}
+						{renderMenuSection(t("others"), lainnyaItems)}
+					</View>
+				</ScrollView>
+			</SafeAreaView>
+
+			{/* Modal untuk pilihan foto */}
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={showImageOptions}
+				onRequestClose={() => setShowImageOptions(false)}
+			>
+				<TouchableOpacity
+					style={styles.modalOverlay}
+					activeOpacity={1}
+					onPress={() => setShowImageOptions(false)}
+				>
+					<View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+						<View
+							style={[styles.modalHeader, { borderBottomColor: theme.border }]}
+						>
+							<Text style={[styles.modalTitle, { color: theme.text }]}>
+								{t("changePhoto")}
+							</Text>
+							<TouchableOpacity onPress={() => setShowImageOptions(false)}>
+								<Ionicons name="close" size={24} color={theme.textSecondary} />
+							</TouchableOpacity>
+						</View>
+
+						<TouchableOpacity
+							style={[styles.modalOption, { borderBottomColor: theme.border }]}
+							onPress={takePhoto}
+						>
+							<Ionicons name="camera-outline" size={24} color={theme.primary} />
+							<Text style={[styles.modalOptionText, { color: theme.text }]}>
+								{t("takePhoto")}
+							</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity
+							style={[styles.modalOption, { borderBottomColor: theme.border }]}
+							onPress={pickImage}
+						>
+							<Ionicons name="image-outline" size={24} color={theme.primary} />
+							<Text style={[styles.modalOptionText, { color: theme.text }]}>
+								{t("chooseFromGallery")}
+							</Text>
+						</TouchableOpacity>
+
+						{profileData.image !== "https://via.placeholder.com/70" && (
+							<TouchableOpacity
+								style={[styles.modalOption, styles.modalOptionDanger]}
+								onPress={() => {
+									setProfileData({
+										...profileData,
+										image: "https://via.placeholder.com/70",
+									});
+									setShowImageOptions(false);
+								}}
+							>
+								<Ionicons name="trash-outline" size={24} color="#FF3B30" />
+								<Text
+									style={[styles.modalOptionText, styles.modalOptionTextDanger]}
+								>
+									{t("deletePhoto")}
+								</Text>
+							</TouchableOpacity>
+						)}
+					</View>
+				</TouchableOpacity>
+			</Modal>
+		</LinearGradient>
+	);
+};;
 
 const styles = StyleSheet.create({
   container: {

@@ -138,6 +138,10 @@ const styles = StyleSheet.create({
 	appTitle: {
 		fontSize: 18,
 		marginTop: 50,
+		marginBottom: 20,
+		color: "#333",
+		fontWeight: "bold",
+		textAlign: "center",
 	},
 
 	card: {
@@ -170,7 +174,7 @@ const styles = StyleSheet.create({
 	},
 
 	button: {
-		backgroundColor: "#6C8EE5",
+		backgroundColor: "#2196F3",
 		padding: 15,
 		borderRadius: 12,
 		alignItems: "center",

@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Alert,
   Image,
@@ -142,34 +143,50 @@ const EditProfile = ({ navigation, route }) => {
     }
   };
 
-  const handleSave = () => {
-    // Validasi form
-    if (!formData.username.trim()) {
-      Alert.alert('Peringatan', 'Nama pengguna tidak boleh kosong');
-      return;
-    }
-    if (!formData.phoneNumber.trim()) {
-      Alert.alert('Peringatan', 'Nomor handphone tidak boleh kosong');
-      return;
-    }
-    if (!formData.email.trim()) {
-      Alert.alert('Peringatan', 'Email tidak boleh kosong');
-      return;
-    }
+  const handleSave = async () => {
+		// Validasi
+		if (!formData.username.trim()) {
+			Alert.alert("Peringatan", "Nama pengguna tidak boleh kosong");
+			return;
+		}
+		if (!formData.phoneNumber.trim()) {
+			Alert.alert("Peringatan", "Nomor handphone tidak boleh kosong");
+			return;
+		}
+		if (!formData.email.trim()) {
+			Alert.alert("Peringatan", "Email tidak boleh kosong");
+			return;
+		}
 
-    // Kirim data kembali ke ProfileScreen (nested: MainTab > Profile tab)
-    navigation.navigate('MainTab', {
-      screen: 'Profile',
-      params: {
-        updatedProfile: {
-          image: profileImage,
-          username: formData.username,
-          phone: formData.phoneNumber,
-          email: formData.email
-        }
-      }
-    });
-  };
+		try {
+			const username = await AsyncStorage.getItem("currentUser");
+
+			const updatedProfile = {
+				image: profileImage,
+				username: formData.username,
+				phone: formData.phoneNumber,
+				email: formData.email,
+			};
+
+			// ✅ SIMPAN KE USER LOGIN
+			if (username) {
+				await AsyncStorage.setItem(
+					`user_${username}_profile`,
+					JSON.stringify(updatedProfile),
+				);
+			}
+
+			// ✅ kirim ke ProfileScreen juga (biar langsung update)
+			navigation.navigate("MainTab", {
+				screen: "Profile",
+				params: {
+					updatedProfile: updatedProfile,
+				},
+			});
+		} catch (error) {
+			Alert.alert("Error", "Gagal menyimpan profile");
+		}
+	};
 
   return (
     <LinearGradient

@@ -11,6 +11,7 @@ import {
 	Platform,
 	Alert,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,34 +22,35 @@ export default function LoginScreen({ navigation }) {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const handleLogin = async () => {
-		// Validasi input
-		if (!username || !password) {
-			Alert.alert("Error", "Username dan password harus diisi");
+		const user = await AsyncStorage.getItem("user");
+
+		if (!user) {
+			Alert.alert("Error", "Belum ada akun");
 			return;
 		}
 
-		try {
-			const user = await AsyncStorage.getItem("user");
+		const data = JSON.parse(user);
 
-			if (!user) {
-				Alert.alert("Error", "Belum ada akun. Silakan daftar terlebih dahulu");
-				return;
-			}
+		if (username === data.username && password === data.password) {
+			// ✅ set login
+			await AsyncStorage.setItem("isLogin", "true");
+			await AsyncStorage.setItem("currentUser", data.username);
 
-			const data = JSON.parse(user);
+			// ✅ ambil data user
+			const favorites = await AsyncStorage.getItem(
+				`user_${data.username}_favorites`,
+			);
+			const history = await AsyncStorage.getItem(
+				`user_${data.username}_history`,
+			);
 
-			if (username === data.username && password === data.password) {
-				// Simpan status login
-				await AsyncStorage.setItem("isLogin", "true");
+			// ✅ masukin ke session
+			await AsyncStorage.setItem("favorites", favorites || JSON.stringify([]));
+			await AsyncStorage.setItem("history", history || JSON.stringify([]));
 
-				// Navigasi ke MainTab dan ganti halaman login
-				navigation.replace("MainTab");
-			} else {
-				Alert.alert("Error", "Username atau password salah");
-			}
-		} catch (error) {
-			console.error("Login error:", error);
-			Alert.alert("Error", "Terjadi kesalahan saat login");
+			navigation.replace("MainTab");
+		} else {
+			Alert.alert("Error", "Username atau password salah");
 		}
 	};
 
@@ -72,9 +74,7 @@ export default function LoginScreen({ navigation }) {
 							<TextInput
 								placeholder="Username"
 								style={styles.textInput}
-								value={username}
 								onChangeText={setUsername}
-								autoCapitalize="none"
 							/>
 						</View>
 
@@ -84,7 +84,6 @@ export default function LoginScreen({ navigation }) {
 								placeholder="Password"
 								secureTextEntry={!showPassword}
 								style={styles.textInput}
-								value={password}
 								onChangeText={setPassword}
 							/>
 							<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -99,11 +98,11 @@ export default function LoginScreen({ navigation }) {
 						<TouchableOpacity style={styles.button} onPress={handleLogin}>
 							<Text style={styles.buttonText}>Login</Text>
 						</TouchableOpacity>
-
 						<View style={styles.row}>
 							<Text>Belum punya akun? </Text>
+
 							<TouchableOpacity onPress={() => navigation.navigate("Register")}>
-								<Text style={styles.link}>daftar sini</Text>
+								<Text style={styles.link}>Register</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -112,7 +111,6 @@ export default function LoginScreen({ navigation }) {
 		</KeyboardAvoidingView>
 	);
 }
-
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -122,6 +120,7 @@ const styles = StyleSheet.create({
 	appTitle: {
 		fontSize: 18,
 		marginTop: 50,
+		marginBottom: 20,
 		color: "#333",
 		fontWeight: "bold",
 		textAlign: "center",

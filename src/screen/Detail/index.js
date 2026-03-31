@@ -17,24 +17,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFavorites } from "../../context/FavoriteContext";
-import { useLastSeen } from "../../context/LastSeenContext"; // TAMBAHKAN IMPORT INI
+import { useLastSeen } from "../../context/LastSeenContext";
+import { useTheme } from "../../context/ThemeContext"; // TAMBAHKAN INI
 
 const { width } = Dimensions.get("window");
 
-const lightTheme = {
-	gradientColors: ["#24ccff", "#aaf1ff", "#e0efff"],
-	card: "#FFFFFF",
-	text: "#000000",
-	textSecondary: "#666666",
-	primary: "#057eff",
-};
-
-const theme = lightTheme;
-
 export default function Detail({ navigation, route }) {
 	const { isFavorite, toggleFavorite } = useFavorites();
-	const { addToLastSeen } = useLastSeen(); // TAMBAHKAN INI
-	
+	const { addToLastSeen } = useLastSeen();
+	const { theme } = useTheme(); // TAMBAHKAN INI — hapus lightTheme & const theme = lightTheme
+
 	const [activeSlide, setActiveSlide] = useState(0);
 	const [lightboxVisible, setLightboxVisible] = useState(false);
 	const [selectedImage, setSelectedImage] = useState(null);
@@ -42,15 +34,13 @@ export default function Detail({ navigation, route }) {
 
 	const { item } = route.params;
 
-	// TAMBAHKAN USEFFECT INI UNTUK MENCATAT KE LAST SEEN
 	useEffect(() => {
 		if (item) {
-			// Buat salinan item dengan properti yang konsisten
 			const itemToSave = {
 				id: item.id,
 				name: item.name || item.title,
 				category: item.category,
-				address: item.address || item.addres, // Tangani address atau addres
+				address: item.address || item.addres,
 				rating: item.rating,
 				image: item.image,
 				description: item.description,
@@ -94,9 +84,8 @@ export default function Detail({ navigation, route }) {
 		}
 	};
 
-	// FUNGSI MAPS - KONFIRMASI SEDERHANA
 	const handleOpenMaps = () => {
-		const alamat = item.address || item.addres || '';
+		const alamat = item.address || item.addres || "";
 		const searchQuery = `${item.name}, ${alamat}`;
 		const encodedQuery = encodeURIComponent(searchQuery);
 
@@ -147,7 +136,10 @@ export default function Detail({ navigation, route }) {
 						<TouchableOpacity onPress={() => navigation.goBack()}>
 							<Ionicons name="arrow-back" size={24} color={theme.text} />
 						</TouchableOpacity>
-						<Text style={styles.headerTitle} numberOfLines={1}>
+						<Text
+							style={[styles.headerTitle, { color: theme.text }]}
+							numberOfLines={1}
+						>
 							{item.name}
 						</Text>
 						<View style={{ width: 24 }} />
@@ -178,14 +170,17 @@ export default function Detail({ navigation, route }) {
 						{images.map((_, index) => (
 							<View
 								key={index}
-								style={index === activeSlide ? styles.dotActive : styles.dot}
+								style={[
+									index === activeSlide ? styles.dotActive : styles.dot,
+									index === activeSlide && { backgroundColor: theme.primary },
+								]}
 							/>
 						))}
 					</View>
 
 					<View style={styles.actionRow}>
 						<TouchableOpacity
-							style={styles.ticketBtn}
+							style={[styles.ticketBtn, { backgroundColor: theme.primary }]}
 							onPress={handlePesanTiket}
 						>
 							<Text style={styles.ticketText}>Pesan Tiket</Text>
@@ -200,7 +195,9 @@ export default function Detail({ navigation, route }) {
 									color="#FFC107"
 								/>
 							))}
-							<Text style={styles.ratingText}>({item.rating})</Text>
+							<Text style={[styles.ratingText, { color: theme.textSecondary }]}>
+								({item.rating})
+							</Text>
 						</View>
 
 						<TouchableOpacity onPress={handleOpenMaps}>
@@ -208,17 +205,23 @@ export default function Detail({ navigation, route }) {
 						</TouchableOpacity>
 					</View>
 
-					<View style={styles.infoCard}>
+					<View style={[styles.infoCard, { backgroundColor: theme.card }]}>
 						<TouchableOpacity style={styles.infoRow} onPress={handleCall}>
 							<Ionicons name="call-outline" size={20} color={theme.primary} />
-							<Text style={[styles.infoText, styles.linkText]}>
+							<Text
+								style={[
+									styles.infoText,
+									styles.linkText,
+									{ color: theme.primary },
+								]}
+							>
 								{item.phone || "0812-3456-7890"}
 							</Text>
 						</TouchableOpacity>
 
 						<View style={styles.infoRow}>
 							<Ionicons name="time-outline" size={20} color={theme.primary} />
-							<Text style={styles.infoText}>
+							<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 								{item.openHours || "Senin - Minggu, 08:00 - 17:00"}
 							</Text>
 						</View>
@@ -229,30 +232,38 @@ export default function Detail({ navigation, route }) {
 								size={20}
 								color={theme.primary}
 							/>
-							<Text style={styles.infoText}>
+							<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 								{item.price || "Rp 10.000 - Rp 25.000"}
 							</Text>
 						</View>
 					</View>
 
-					<View style={styles.descCard}>
-						<Text style={styles.sectionTitle}>Deskripsi</Text>
-						<Text style={styles.descText}>
+					<View style={[styles.descCard, { backgroundColor: theme.card }]}>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>
+							Deskripsi
+						</Text>
+						<Text style={[styles.descText, { color: theme.textSecondary }]}>
 							{item.description ||
 								`${item.name} berlokasi di ${item.address || item.addres}. Tempat ini menawarkan pengalaman menarik untuk dikunjungi.`}
 						</Text>
 
-						<View style={styles.divider} />
+						<View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-						<Text style={styles.sectionTitle}>Alamat</Text>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>
+							Alamat
+						</Text>
 						<TouchableOpacity onPress={handleOpenMaps}>
-							<Text style={styles.address}>📍 {item.address || item.addres}</Text>
+							<Text style={[styles.address, { color: theme.primary }]}>
+								📍 {item.address || item.addres}
+							</Text>
 						</TouchableOpacity>
 					</View>
 
 					{item.facilities && item.facilities.length > 0 && (
-						<View style={styles.descCard}>
-							<Text style={styles.sectionTitle}>Fasilitas</Text>
+						<View style={[styles.descCard, { backgroundColor: theme.card }]}>
+							<Text style={[styles.sectionTitle, { color: theme.text }]}>
+								Fasilitas
+							</Text>
 							<View style={styles.facilitiesRow}>
 								{item.facilities.map((facility, index) => (
 									<View key={index} style={styles.facilityItem}>
@@ -261,7 +272,14 @@ export default function Detail({ navigation, route }) {
 											size={16}
 											color={theme.primary}
 										/>
-										<Text style={styles.facilityText}>{facility}</Text>
+										<Text
+											style={[
+												styles.facilityText,
+												{ color: theme.textSecondary },
+											]}
+										>
+											{facility}
+										</Text>
 									</View>
 								))}
 							</View>
@@ -269,16 +287,26 @@ export default function Detail({ navigation, route }) {
 					)}
 				</ScrollView>
 
-				<View style={styles.bottomAction}>
+				<View
+					style={[
+						styles.bottomAction,
+						{ backgroundColor: theme.card, borderTopColor: theme.border },
+					]}
+				>
 					<View style={styles.priceContainer}>
-						<Text style={styles.priceLabel}>Mulai dari</Text>
-						<Text style={styles.priceValue}>{item.price || "Rp 10.000"}</Text>
+						<Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
+							Mulai dari
+						</Text>
+						<Text style={[styles.priceValue, { color: theme.primary }]}>
+							{item.price || "Rp 10.000"}
+						</Text>
 					</View>
 
 					<View style={styles.bottomButtons}>
 						<TouchableOpacity
 							style={[
 								styles.likeButton,
+								{ backgroundColor: theme.background },
 								isFavorite(item.id) && styles.likeButtonActive,
 							]}
 							onPress={handleLikePress}
@@ -290,7 +318,7 @@ export default function Detail({ navigation, route }) {
 							/>
 						</TouchableOpacity>
 						<TouchableOpacity
-							style={styles.bookButton}
+							style={[styles.bookButton, { backgroundColor: theme.primary }]}
 							onPress={handlePesanTiket}
 						>
 							<Text style={styles.bookButtonText}>Booking</Text>
@@ -328,7 +356,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		textAlign: "center",
 		paddingHorizontal: 10,
-		color: theme.text,
 	},
 	image: {
 		width: width - 40,
@@ -349,7 +376,7 @@ const styles = StyleSheet.create({
 		width: 8,
 		height: 8,
 		borderRadius: 4,
-		backgroundColor: theme.primary,
+		backgroundColor: "#057eff", // fallback, di-override theme
 		marginHorizontal: 4,
 	},
 	actionRow: {
@@ -360,16 +387,16 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 	},
 	ticketBtn: {
-		backgroundColor: theme.primary,
+		backgroundColor: "#057eff", // fallback, di-override theme
 		paddingHorizontal: 18,
 		paddingVertical: 8,
 		borderRadius: 20,
 	},
 	ticketText: { fontSize: 12, color: "#fff", fontWeight: "600" },
 	ratingRow: { flexDirection: "row", alignItems: "center" },
-	ratingText: { marginLeft: 4, fontSize: 12, color: theme.textSecondary },
+	ratingText: { marginLeft: 4, fontSize: 12, color: "#666666" },
 	infoCard: {
-		backgroundColor: theme.card,
+		backgroundColor: "#FFFFFF", // fallback, di-override theme
 		marginHorizontal: 16,
 		marginBottom: 10,
 		padding: 16,
@@ -380,12 +407,12 @@ const styles = StyleSheet.create({
 	infoText: {
 		marginLeft: 10,
 		fontSize: 13,
-		color: theme.textSecondary,
+		color: "#666666", // fallback, di-override theme
 		flex: 1,
 	},
-	linkText: { color: theme.primary, textDecorationLine: "underline" },
+	linkText: { textDecorationLine: "underline" },
 	descCard: {
-		backgroundColor: theme.card,
+		backgroundColor: "#FFFFFF", // fallback, di-override theme
 		marginHorizontal: 16,
 		marginBottom: 10,
 		padding: 16,
@@ -395,14 +422,14 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: theme.text,
+		color: "#000000", // fallback, di-override theme
 		marginBottom: 8,
 	},
-	descText: { fontSize: 13, color: theme.textSecondary, lineHeight: 20 },
+	descText: { fontSize: 13, color: "#666666", lineHeight: 20 },
 	divider: { height: 1, backgroundColor: "#eee", marginVertical: 12 },
 	address: {
 		fontSize: 13,
-		color: theme.primary,
+		color: "#057eff", // fallback, di-override theme
 		marginTop: 4,
 		fontWeight: "500",
 		textDecorationLine: "underline",
@@ -414,31 +441,31 @@ const styles = StyleSheet.create({
 		width: "50%",
 		marginBottom: 8,
 	},
-	facilityText: { marginLeft: 6, fontSize: 12, color: theme.textSecondary },
+	facilityText: { marginLeft: 6, fontSize: 12, color: "#666666" },
 	bottomAction: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 		padding: 16,
-		backgroundColor: theme.card,
+		backgroundColor: "#FFFFFF", // fallback, di-override theme
 		borderTopWidth: 1,
-		borderTopColor: "#eee",
+		borderTopColor: "#eee", // fallback, di-override theme
 	},
 	priceContainer: { flex: 1 },
-	priceLabel: { fontSize: 11, color: theme.textSecondary },
-	priceValue: { fontSize: 14, fontWeight: "bold", color: theme.primary },
+	priceLabel: { fontSize: 11, color: "#666666" },
+	priceValue: { fontSize: 14, fontWeight: "bold", color: "#057eff" },
 	bottomButtons: { flexDirection: "row", alignItems: "center", gap: 10 },
 	likeButton: {
 		width: 44,
 		height: 44,
 		borderRadius: 22,
-		backgroundColor: "#f5f5f5",
+		backgroundColor: "#f5f5f5", // fallback, di-override theme
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	likeButtonActive: { backgroundColor: "#FFE5E5" },
 	bookButton: {
-		backgroundColor: theme.primary,
+		backgroundColor: "#057eff", // fallback, di-override theme
 		paddingHorizontal: 20,
 		paddingVertical: 10,
 		borderRadius: 22,

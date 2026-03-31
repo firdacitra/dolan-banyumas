@@ -14,25 +14,61 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFavorites } from "../../../context/FavoriteContext";
 import { useLanguage } from "../../../i18n/LanguageContext";
-import { useTheme } from "../../../context/ThemeContext"; // TAMBAHKAN IMPORT INI
+import { useTheme } from "../../../context/ThemeContext";
 
 const Favorites = ({ navigation }) => {
-	const { t } = useLanguage(); // GUNAKAN useLanguage()
-	const { theme } = useTheme(); // GANTI hardcoded theme dengan useTheme()
-	const [selectedCategory, setSelectedCategory] = useState("Semua");
+	const { t } = useLanguage(); // Menggunakan hook bahasa
+	const { theme } = useTheme(); // Menggunakan hook tema
+	const [selectedCategory, setSelectedCategory] = useState("all");
 	const [groupedFavorites, setGroupedFavorites] = useState({});
 
 	const { favorites, removeFavorite, isLoading, loadFavorites } =
 		useFavorites();
 
+	// Kategori yang tersedia
 	const categories = [
-		{ name: t('all') || "Semua", icon: "apps-outline", iconColor: "#0a4914" },
-		{ name: t('touristAttractions') || "Objek Wisata", icon: "image-outline", iconColor: "#FF5757" },
-		{ name: t('culinary') || "Kuliner", icon: "restaurant-outline", iconColor: "#FF8C42" },
-		{ name: t('accommodation') || "Penginapan", icon: "bed-outline", iconColor: "#4CAF50" },
-		{ name: t('souvenirs') || "Oleh-oleh", icon: "gift-outline", iconColor: "#9C27B0" },
-		{ name: t('touristVillage') || "Desa Wisata", icon: "home-outline", iconColor: "#2196F3" },
-		{ name: t('travelAgency') || "Biro Perjalanan", icon: "car-outline", iconColor: "#FF6B9D" },
+		{
+			value: "all",
+			name: t("all"),
+			icon: "apps-outline",
+			iconColor: "#0a4914",
+		},
+		{
+			value: "touristAttractions",
+			name: t("touristAttractions"),
+			icon: "image-outline",
+			iconColor: "#FF5757",
+		},
+		{
+			value: "culinary",
+			name: t("culinary"),
+			icon: "restaurant-outline",
+			iconColor: "#FF8C42",
+		},
+		{
+			value: "accommodation",
+			name: t("accommodation"),
+			icon: "bed-outline",
+			iconColor: "#4CAF50",
+		},
+		{
+			value: "souvenirs",
+			name: t("souvenirs"),
+			icon: "gift-outline",
+			iconColor: "#9C27B0",
+		},
+		{
+			value: "touristVillage",
+			name: t("touristVillage"),
+			icon: "home-outline",
+			iconColor: "#2196F3",
+		},
+		{
+			value: "travelAgency",
+			name: t("travelAgency"),
+			icon: "car-outline",
+			iconColor: "#FF6B9D",
+		},
 	];
 
 	useEffect(() => {
@@ -45,17 +81,39 @@ const Favorites = ({ navigation }) => {
 		groupFavorites();
 	}, [favorites]);
 
+	// Fungsi untuk memeriksa login dan memuat data favorit
 	const checkLoginAndLoad = async () => {
 		const isLogin = await AsyncStorage.getItem("isLogin");
 		if (isLogin !== "true") {
-			Alert.alert(t('login') || "Belum Login", "Silakan login untuk melihat favorit", [
-				{ text: t('ok') || "OK", onPress: () => navigation.goBack() },
+			// Menampilkan alert dengan tombol Cancel dan OK
+			Alert.alert(t("login"), t("loginRequired"), [
+				{
+					text: t("cancel"),
+					style: "cancel",
+					onPress: () => {
+						// Jika pengguna memilih Cancel, kembali ke halaman sebelumnya
+						if (navigation.canGoBack()) {
+							navigation.goBack();
+						} else {
+							// Jika tidak ada halaman sebelumnya, arahkan ke MainTab
+							navigation.navigate("MainTab");
+						}
+					},
+				},
+				{
+					text: t("ok"),
+					onPress: () => {
+						// Jika pengguna memilih OK, arahkan ke halaman Login
+						navigation.replace("Login");
+					},
+				},
 			]);
 		} else {
 			await loadFavorites();
 		}
 	};
 
+	// Mengelompokkan favorit berdasarkan kategori
 	const groupFavorites = () => {
 		const grouped = {};
 		favorites.forEach((item) => {
@@ -66,44 +124,39 @@ const Favorites = ({ navigation }) => {
 		setGroupedFavorites(grouped);
 	};
 
+	// Mendapatkan kategori utama dari subkategori
 	const getMainCategory = (subCategory) => {
 		const mapping = {
-			"Wisata Alam": t('touristAttractions') || "Objek Wisata",
-			"Wisata Buatan": t('touristAttractions') || "Objek Wisata",
-			Kuliner: t('culinary') || "Kuliner",
-			Penginapan: t('accommodation') || "Penginapan",
-			"Oleh-oleh": t('souvenirs') || "Oleh-oleh",
-			"Desa Wisata": t('touristVillage') || "Desa Wisata",
-			"Biro Perjalanan": t('travelAgency') || "Biro Perjalanan",
+			"Wisata Alam": "touristAttractions",
+			"Wisata Buatan": "touristAttractions",
+			Kuliner: "culinary",
+			Penginapan: "accommodation",
+			"Oleh-oleh": "souvenirs",
+			"Desa Wisata": "touristVillage",
+			"Biro Perjalanan": "travelAgency",
 		};
-		return mapping[subCategory] || (t('touristAttractions') || "Objek Wisata");
+		return mapping[subCategory] || "touristAttractions";
 	};
 
-	// PERBAIKI FUNGSI HANDLE REMOVE
+	// Menghapus item dari favorit
 	const handleRemoveFavorite = (item) => {
 		Alert.alert(
-			"Hapus dari Favorit",
-			`Apakah Anda yakin ingin menghapus "${item.name}" dari favorit?`,
+			t("removeFromFavorites"),
+			`${t("removeFromFavoritesConfirm")} "${item.name}"?`,
 			[
-				{ text: t('cancel') || "Batal", style: "cancel" },
+				{ text: t("cancel"), style: "cancel" },
 				{
-					text: t('deleteAccount') || "Hapus",
+					text: t("delete"),
 					onPress: async () => {
 						try {
-							console.log("Mencoba menghapus:", item.id, item.name); // Debug
-
 							const result = await removeFavorite(item.id);
-
-							console.log("Hasil remove:", result); // Debug
-
 							if (result && result.success) {
-								Alert.alert("Berhasil", result.message);
+								Alert.alert(t("success"), result.message);
 							} else {
-								Alert.alert("Gagal", result?.message || "Terjadi kesalahan");
+								Alert.alert(t("failed"), result?.message || t("errorOccurred"));
 							}
 						} catch (error) {
-							console.log("Error di handleRemove:", error);
-							Alert.alert("Error", "Gagal menghapus favorit");
+							Alert.alert(t("error"), t("failedToRemove"));
 						}
 					},
 					style: "destructive",
@@ -112,6 +165,7 @@ const Favorites = ({ navigation }) => {
 		);
 	};
 
+	// Menampilkan bintang rating
 	const renderStars = (rating) => {
 		const stars = [];
 		const fullStars = Math.floor(rating);
@@ -141,6 +195,7 @@ const Favorites = ({ navigation }) => {
 		return stars;
 	};
 
+	// Mendapatkan warna badge kategori
 	const getCategoryBadgeColor = (category) => {
 		const colors = {
 			"Wisata Alam": "#FF5757",
@@ -154,6 +209,7 @@ const Favorites = ({ navigation }) => {
 		return colors[category] || "#FF5757";
 	};
 
+	// Render card item favorit
 	const renderCard = (item) => (
 		<View key={item.id} style={[styles.card, { backgroundColor: theme.card }]}>
 			<Image source={item.image} style={styles.cardImage} />
@@ -168,8 +224,12 @@ const Favorites = ({ navigation }) => {
 					<Text style={styles.categoryText}>{item.category}</Text>
 				</View>
 
-				<Text style={[styles.cardTitle, { color: theme.text }]}>{item.name}</Text>
-				<Text style={[styles.cardAddress, { color: theme.textSecondary }]}>{item.address}</Text>
+				<Text style={[styles.cardTitle, { color: theme.text }]}>
+					{item.name}
+				</Text>
+				<Text style={[styles.cardAddress, { color: theme.textSecondary }]}>
+					{item.address}
+				</Text>
 
 				<View style={styles.cardFooter}>
 					<View style={styles.ratingContainer}>{renderStars(item.rating)}</View>
@@ -178,12 +238,12 @@ const Favorites = ({ navigation }) => {
 						style={[styles.detailButton, { backgroundColor: theme.primary }]}
 						onPress={() => navigation.navigate("Detail", { item })}
 					>
-						<Text style={styles.detailButtonText}>{t('viewDetail')}</Text>
+						<Text style={styles.detailButtonText}>{t("viewDetail")}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
 
-			{/* TOMBOL HAPUS */}
+			{/* Tombol hapus favorit */}
 			<TouchableOpacity
 				style={[styles.removeButton, { backgroundColor: theme.card }]}
 				onPress={() => handleRemoveFavorite(item)}
@@ -193,27 +253,20 @@ const Favorites = ({ navigation }) => {
 		</View>
 	);
 
+	// Render item kategori
 	const renderCategoryItem = (category) => {
-		const isSelected = selectedCategory === category.name;
+		const isSelected = selectedCategory === category.value;
 
 		let itemCount = 0;
-		if (category.name === (t('all') || "Semua")) {
+		if (category.value === "all") {
 			itemCount = favorites.length;
 		} else {
-			const mappedCategory = {
-				[t('touristAttractions') || "Objek Wisata"]: t('touristAttractions') || "Objek Wisata",
-				[t('culinary') || "Kuliner"]: t('culinary') || "Kuliner",
-				[t('accommodation') || "Penginapan"]: t('accommodation') || "Penginapan",
-				[t('souvenirs') || "Oleh-oleh"]: t('souvenirs') || "Oleh-oleh",
-				[t('touristVillage') || "Desa Wisata"]: t('touristVillage') || "Desa Wisata",
-				[t('travelAgency') || "Biro Perjalanan"]: t('travelAgency') || "Biro Perjalanan",
-			}[category.name];
-			itemCount = groupedFavorites[mappedCategory]?.length || 0;
+			itemCount = groupedFavorites[category.value]?.length || 0;
 		}
 
 		return (
 			<TouchableOpacity
-				key={category.name}
+				key={category.value}
 				style={[
 					styles.categoryItem,
 					{ backgroundColor: theme.card, borderColor: theme.border },
@@ -222,7 +275,7 @@ const Favorites = ({ navigation }) => {
 						borderColor: category.iconColor,
 					},
 				]}
-				onPress={() => setSelectedCategory(category.name)}
+				onPress={() => setSelectedCategory(category.value)}
 			>
 				<Ionicons
 					name={category.icon}
@@ -243,42 +296,32 @@ const Favorites = ({ navigation }) => {
 		);
 	};
 
+	// Mendapatkan favorit yang sudah difilter
 	const getFilteredFavorites = () => {
-		if (selectedCategory === (t('all') || "Semua")) {
+		if (selectedCategory === "all") {
 			return groupedFavorites;
 		}
-
-		const categoryMap = {
-			[t('touristAttractions') || "Objek Wisata"]: t('touristAttractions') || "Objek Wisata",
-			[t('culinary') || "Kuliner"]: t('culinary') || "Kuliner",
-			[t('accommodation') || "Penginapan"]: t('accommodation') || "Penginapan",
-			[t('souvenirs') || "Oleh-oleh"]: t('souvenirs') || "Oleh-oleh",
-			[t('touristVillage') || "Desa Wisata"]: t('touristVillage') || "Desa Wisata",
-			[t('travelAgency') || "Biro Perjalanan"]: t('travelAgency') || "Biro Perjalanan",
-		};
-
-		const mappedCategory = categoryMap[selectedCategory];
 		return {
-			[selectedCategory]: groupedFavorites[mappedCategory] || [],
+			[selectedCategory]: groupedFavorites[selectedCategory] || [],
 		};
 	};
 
+	// Menampilkan loading
 	if (isLoading) {
 		return (
-			<LinearGradient
-				colors={theme.gradientColors}
-				style={styles.container}
-			>
+			<LinearGradient colors={theme.gradientColors} style={styles.container}>
 				<SafeAreaView style={styles.safeArea}>
 					<View style={styles.header}>
 						<TouchableOpacity onPress={() => navigation.goBack()}>
 							<Ionicons name="arrow-back" size={24} color={theme.text} />
 						</TouchableOpacity>
-						<Text style={[styles.headerTitle, { color: theme.text }]}>{t('myFavoritesTitle')}</Text>
+						<Text style={[styles.headerTitle, { color: theme.text }]}>
+							{t("myFavoritesTitle")}
+						</Text>
 						<View style={{ width: 24 }} />
 					</View>
 					<View style={styles.loadingContainer}>
-						<Text style={{ color: theme.text }}>Memuat favorit...</Text>
+						<Text style={{ color: theme.text }}>{t("loadingFavorites")}</Text>
 					</View>
 				</SafeAreaView>
 			</LinearGradient>
@@ -289,21 +332,20 @@ const Favorites = ({ navigation }) => {
 	const hasFavorites = favorites.length > 0;
 
 	return (
-		<LinearGradient
-			colors={theme.gradientColors}
-			style={styles.container}
-		>
+		<LinearGradient colors={theme.gradientColors} style={styles.container}>
 			<SafeAreaView style={styles.safeArea}>
-				{/* Header */}
+				{/* Header dengan tombol kembali */}
 				<View style={styles.header}>
 					<TouchableOpacity onPress={() => navigation.goBack()}>
 						<Ionicons name="arrow-back" size={24} color={theme.text} />
 					</TouchableOpacity>
-					<Text style={[styles.headerTitle, { color: theme.text }]}>{t('myFavoritesTitle')}</Text>
+					<Text style={[styles.headerTitle, { color: theme.text }]}>
+						{t("myFavoritesTitle")}
+					</Text>
 					<View style={{ width: 24 }} />
 				</View>
 
-				{/* Category Scroll */}
+				{/* ScrollView untuk kategori */}
 				<View style={styles.categoryScrollContainer}>
 					<ScrollView
 						horizontal
@@ -314,19 +356,25 @@ const Favorites = ({ navigation }) => {
 					</ScrollView>
 				</View>
 
-				{/* Content */}
+				{/* Konten utama */}
 				{!hasFavorites ? (
 					<View style={styles.emptyContainer}>
-						<Ionicons name="heart-outline" size={60} color={theme.textSecondary} />
-						<Text style={[styles.emptyTitle, { color: theme.text }]}>Belum Ada Favorit</Text>
+						<Ionicons
+							name="heart-outline"
+							size={60}
+							color={theme.textSecondary}
+						/>
+						<Text style={[styles.emptyTitle, { color: theme.text }]}>
+							{t("noFavorites")}
+						</Text>
 						<Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-							Item yang kamu sukai akan muncul di sini
+							{t("noFavoritesDesc")}
 						</Text>
 						<TouchableOpacity
 							style={[styles.exploreButton, { backgroundColor: theme.primary }]}
 							onPress={() => navigation.navigate("MainTab")}
 						>
-							<Text style={styles.exploreButtonText}>Jelajahi Sekarang</Text>
+							<Text style={styles.exploreButtonText}>{t("exploreNow")}</Text>
 						</TouchableOpacity>
 					</View>
 				) : (
@@ -336,11 +384,15 @@ const Favorites = ({ navigation }) => {
 						contentContainerStyle={styles.scrollContent}
 					>
 						{Object.entries(filteredFavorites).map(
-							([category, items]) =>
+							([categoryKey, items]) =>
 								items.length > 0 && (
-									<View key={category} style={styles.categorySection}>
-										{selectedCategory === (t('all') || "Semua") && (
-											<Text style={[styles.categoryTitle, { color: theme.text }]}>{category}</Text>
+									<View key={categoryKey} style={styles.categorySection}>
+										{selectedCategory === "all" && (
+											<Text
+												style={[styles.categoryTitle, { color: theme.text }]}
+											>
+												{t(categoryKey)}
+											</Text>
 										)}
 										{items.map((item) => renderCard(item))}
 									</View>
@@ -353,6 +405,7 @@ const Favorites = ({ navigation }) => {
 	);
 };
 
+// Style untuk komponen
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,

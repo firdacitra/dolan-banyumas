@@ -24,25 +24,14 @@ import {
 	biroPerjalananData,
 } from "../../constant/dataMenu";
 
-import { useFavorites } from "../../context/FavoriteContext"; // IMPORT CONTEXT
-
-/* ================= THEME ================= */
-const lightTheme = {
-	gradientColors: ["#24ccff", "#aaf1ff", "#e0efff"],
-	card: "#FFFFFF",
-	text: "#000000",
-	textSecondary: "#666666",
-	primary: "#057eff",
-};
-
-const theme = lightTheme;
+import { useFavorites } from "../../context/FavoriteContext";
+import { useTheme } from "../../context/ThemeContext";
 
 const MenuListScreen = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
 	const { category } = route.params;
-
-	// GUNAKAN FAVORITES CONTEXT
+	const { theme } = useTheme();
 	const { isFavorite, toggleFavorite } = useFavorites();
 
 	const [searchQuery, setSearchQuery] = useState("");
@@ -104,6 +93,7 @@ const MenuListScreen = () => {
 	const filteredData = useMemo(() => {
 		let data = getCategoryData();
 
+		// Filter berdasarkan pencarian
 		if (searchQuery) {
 			data = data.filter(
 				(item) =>
@@ -112,12 +102,20 @@ const MenuListScreen = () => {
 			);
 		}
 
+		// Sorting berdasarkan filter yang dipilih
 		if (activeFilter === "Rating") {
+			// Rating tertinggi di atas (descending)
 			data = [...data].sort((a, b) => b.rating - a.rating);
 		} else if (activeFilter === "Terpopuler") {
+			// Terpopuler berdasarkan rating tertinggi (descending)
 			data = [...data].sort((a, b) => b.rating - a.rating);
 		} else if (activeFilter === "Termurah") {
-			data = [...data].sort((a, b) => (a.price || 0) - (b.price || 0));
+			// Termurah di atas (ascending)
+			data = [...data].sort((a, b) => {
+				const priceA = a.price || Infinity;
+				const priceB = b.price || Infinity;
+				return priceA - priceB;
+			});
 		}
 
 		return data;
@@ -143,7 +141,7 @@ const MenuListScreen = () => {
 				);
 			} else {
 				stars.push(
-					<Text key={i} style={styles.starEmpty}>
+					<Text key={i} style={[styles.starEmpty, { color: theme.starEmpty }]}>
 						★
 					</Text>,
 				);
@@ -171,18 +169,26 @@ const MenuListScreen = () => {
 				{/* HEADER */}
 				<View style={styles.header}>
 					<TouchableOpacity
-						style={styles.backButton}
+						style={[
+							styles.backButton,
+							{ backgroundColor: theme.card, shadowColor: theme.cardShadow },
+						]}
 						onPress={() => navigation.goBack()}
 					>
 						<Ionicons name="arrow-back" size={22} color={theme.text} />
 					</TouchableOpacity>
 
-					<View style={styles.searchContainer}>
-						<Ionicons name="search" size={18} color="#999" />
+					<View
+						style={[
+							styles.searchContainer,
+							{ backgroundColor: theme.card, shadowColor: theme.cardShadow },
+						]}
+					>
+						<Ionicons name="search" size={18} color={theme.textSecondary} />
 						<TextInput
-							style={styles.searchInput}
+							style={[styles.searchInput, { color: theme.text }]}
 							placeholder={`Cari ${getCategoryTitle()}`}
-							placeholderTextColor="#999"
+							placeholderTextColor={theme.textSecondary}
 							value={searchQuery}
 							onChangeText={setSearchQuery}
 						/>
@@ -196,14 +202,22 @@ const MenuListScreen = () => {
 							key={filter}
 							style={[
 								styles.filterChip,
-								activeFilter === filter && styles.filterChipActive,
+								{ backgroundColor: theme.card },
+								activeFilter === filter && [
+									styles.filterChipActive,
+									{ backgroundColor: theme.primary },
+								],
 							]}
 							onPress={() => setActiveFilter(filter)}
 						>
 							<Text
 								style={[
 									styles.filterChipText,
-									activeFilter === filter && styles.filterChipTextActive,
+									{ color: theme.textSecondary },
+									activeFilter === filter && [
+										styles.filterChipTextActive,
+										{ color: "#fff" },
+									],
 								]}
 							>
 								{filter}
@@ -219,7 +233,16 @@ const MenuListScreen = () => {
 				>
 					{filteredData.length > 0 ? (
 						filteredData.map((item) => (
-							<View key={item.id} style={styles.card}>
+							<View
+								key={item.id}
+								style={[
+									styles.card,
+									{
+										backgroundColor: theme.card,
+										shadowColor: theme.cardShadow,
+									},
+								]}
+							>
 								<Image source={item.image} style={styles.cardImage} />
 
 								<View style={styles.cardContent}>
@@ -232,8 +255,14 @@ const MenuListScreen = () => {
 										<Text style={styles.categoryText}>{item.category}</Text>
 									</View>
 
-									<Text style={styles.cardTitle}>{item.name}</Text>
-									<Text style={styles.cardAddress}>{item.address}</Text>
+									<Text style={[styles.cardTitle, { color: theme.text }]}>
+										{item.name}
+									</Text>
+									<Text
+										style={[styles.cardAddress, { color: theme.textSecondary }]}
+									>
+										{item.address}
+									</Text>
 
 									<View style={styles.cardFooter}>
 										<View style={styles.ratingContainer}>
@@ -241,7 +270,10 @@ const MenuListScreen = () => {
 										</View>
 
 										<TouchableOpacity
-											style={styles.detailButton}
+											style={[
+												styles.detailButton,
+												{ backgroundColor: theme.primary },
+											]}
 											onPress={() => navigation.navigate("Detail", { item })}
 										>
 											<Text style={styles.detailButtonText}>
@@ -251,29 +283,47 @@ const MenuListScreen = () => {
 									</View>
 								</View>
 
-								{/* TOMBOL FAVORITE DENGAN CONTEXT */}
+								{/* TOMBOL FAVORITE */}
 								<TouchableOpacity
 									style={[
 										styles.favoriteButton,
-										isFavorite(item.id) && styles.favoriteButtonActive,
+										{
+											backgroundColor: theme.card,
+											shadowColor: theme.cardShadow,
+										},
+										isFavorite(item.id) && [
+											styles.favoriteButtonActive,
+											{ backgroundColor: "#FFE5E5" },
+										],
 									]}
 									onPress={() => handleLikePress(item)}
 								>
 									<Ionicons
 										name={isFavorite(item.id) ? "heart" : "heart-outline"}
 										size={18}
-										color={isFavorite(item.id) ? "#FF3B30" : "#666"}
+										color={
+											isFavorite(item.id) ? "#FF3B30" : theme.textSecondary
+										}
 									/>
 								</TouchableOpacity>
 							</View>
 						))
 					) : (
 						<View style={styles.emptyContainer}>
-							<Ionicons name="search-outline" size={50} color="#999" />
-							<Text style={styles.emptyText}>Tidak ada data ditemukan</Text>
+							<Ionicons
+								name="search-outline"
+								size={50}
+								color={theme.textSecondary}
+							/>
+							<Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+								Tidak ada data ditemukan
+							</Text>
 							{searchQuery ? (
 								<TouchableOpacity
-									style={styles.resetButton}
+									style={[
+										styles.resetButton,
+										{ backgroundColor: theme.primary },
+									]}
 									onPress={() => setSearchQuery("")}
 								>
 									<Text style={styles.resetButtonText}>Reset Pencarian</Text>
@@ -305,28 +355,31 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 20,
-		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 		elevation: 4,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
 	},
 
 	searchContainer: {
 		flex: 1,
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: "#fff",
 		borderRadius: 25,
 		paddingHorizontal: 15,
 		height: 42,
 		gap: 8,
 		elevation: 4,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
 	},
 
 	searchInput: {
 		flex: 1,
 		fontSize: 14,
-		color: theme.text,
 	},
 
 	filterContainer: {
@@ -340,21 +393,22 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		paddingVertical: 8,
 		borderRadius: 20,
-		backgroundColor: "#E0E0E0",
+		elevation: 2,
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.05,
+		shadowRadius: 2,
 	},
 
 	filterChipActive: {
-		backgroundColor: theme.primary,
+		elevation: 3,
 	},
 
 	filterChipText: {
 		fontSize: 13,
-		color: "#666",
 		fontWeight: "500",
 	},
 
 	filterChipTextActive: {
-		color: "#fff",
 		fontWeight: "600",
 	},
 
@@ -365,12 +419,14 @@ const styles = StyleSheet.create({
 
 	card: {
 		flexDirection: "row",
-		backgroundColor: theme.card,
 		borderRadius: 20,
 		marginBottom: 15,
 		padding: 15,
 		elevation: 5,
 		position: "relative",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
 	},
 
 	cardImage: {
@@ -402,12 +458,10 @@ const styles = StyleSheet.create({
 	cardTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: theme.text,
 	},
 
 	cardAddress: {
 		fontSize: 12,
-		color: theme.textSecondary,
 		marginBottom: 8,
 	},
 
@@ -434,11 +488,9 @@ const styles = StyleSheet.create({
 
 	starEmpty: {
 		fontSize: 18,
-		color: "#E0E0E0",
 	},
 
 	detailButton: {
-		backgroundColor: theme.primary,
 		paddingHorizontal: 14,
 		paddingVertical: 7,
 		borderRadius: 18,
@@ -457,14 +509,16 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 16,
-		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 		elevation: 5,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 2,
 	},
 
 	favoriteButtonActive: {
-		backgroundColor: "#FFE5E5",
+		elevation: 5,
 	},
 
 	emptyContainer: {
@@ -476,7 +530,6 @@ const styles = StyleSheet.create({
 
 	emptyText: {
 		fontSize: 16,
-		color: "#999",
 		marginTop: 10,
 	},
 
@@ -484,7 +537,6 @@ const styles = StyleSheet.create({
 		marginTop: 20,
 		paddingHorizontal: 20,
 		paddingVertical: 10,
-		backgroundColor: theme.primary,
 		borderRadius: 20,
 	},
 
